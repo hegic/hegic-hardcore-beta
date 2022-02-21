@@ -1,12 +1,12 @@
-import { ethers, deployments } from "hardhat"
-import { BigNumber as BN, Signer } from "ethers"
-import { solidity } from "ethereum-waffle"
+import {ethers, deployments} from "hardhat"
+import {BigNumber as BN, Signer} from "ethers"
+import {solidity} from "ethereum-waffle"
 import chai from "chai"
-import { HegicStaking } from "../../typechain/HegicStaking"
-import { Erc20Mock } from "../../typechain/Erc20Mock"
+import {HegicStaking} from "../../typechain/HegicStaking"
+import {Erc20Mock} from "../../typechain/Erc20Mock"
 
 chai.use(solidity)
-const { expect } = chai
+const {expect} = chai
 
 describe("HegicStaking", async () => {
   let hegicStaking: HegicStaking
@@ -17,8 +17,8 @@ describe("HegicStaking", async () => {
   let bob: Signer
 
   beforeEach(async () => {
-    await deployments.fixture(['test'])
-      ;[deployer, alice, bob] = await ethers.getSigners()
+    await deployments.fixture(["test"])
+    ;[deployer, alice, bob] = await ethers.getSigners()
 
     fakeWBTC = (await ethers.getContract("WBTC")) as Erc20Mock
     fakeHegic = (await ethers.getContract("HEGIC")) as Erc20Mock
@@ -188,7 +188,7 @@ describe("HegicStaking", async () => {
         .transfer(
           hegicStaking.address,
           ethers.utils.parseUnits("10000", await fakeWBTC.decimals()),
-      )
+        )
       await hegicStaking.connect(alice).distributeUnrealizedRewards()
 
       const fakeWBTCBalanceAfter = await fakeWBTC.balanceOf(
@@ -207,7 +207,7 @@ describe("HegicStaking", async () => {
         .transfer(
           hegicStaking.address,
           ethers.utils.parseUnits("10000", await fakeWBTC.decimals()),
-      )
+        )
       await hegicStaking.connect(alice).distributeUnrealizedRewards()
 
       const fakeWBTCBalanceAfter = await fakeWBTC.balanceOf(
@@ -245,7 +245,7 @@ describe("HegicStaking", async () => {
         .transfer(
           hegicStaking.address,
           ethers.utils.parseUnits("10000", await fakeWBTC.decimals()),
-      )
+        )
       await expect(
         hegicStaking.connect(alice).distributeUnrealizedRewards(),
       ).not.to.emit(hegicStaking, "Profit")

@@ -1,15 +1,15 @@
-import { ethers, deployments } from "hardhat"
-import { BigNumber as BN, Signer } from "ethers"
-import { solidity } from "ethereum-waffle"
+import {ethers, deployments} from "hardhat"
+import {BigNumber as BN, Signer} from "ethers"
+import {solidity} from "ethereum-waffle"
 import chai from "chai"
-import { HegicPool } from "../../typechain/HegicPool"
-import { WethMock } from "../../typechain/WethMock"
-import { PriceCalculator } from "../../typechain/PriceCalculator"
-import { PriceProviderMock } from "../../typechain/PriceProviderMock"
-import { deployParams } from "../../deploy/01_HegicClassic/07_AdaptivePricers"
+import {HegicPool} from "../../typechain/HegicPool"
+import {WethMock} from "../../typechain/WethMock"
+import {PriceCalculator} from "../../typechain/PriceCalculator"
+import {PriceProviderMock} from "../../typechain/PriceProviderMock"
+import {deployParams} from "../../deploy/01_HegicClassic/07_AdaptivePricers"
 
 chai.use(solidity)
-const { expect } = chai
+const {expect} = chai
 
 describe("PriceCalculator", async () => {
   let hegicPoolWETH: HegicPool
@@ -19,8 +19,8 @@ describe("PriceCalculator", async () => {
   let alice: Signer
 
   beforeEach(async () => {
-    await deployments.fixture(['test'])
-      ;[, alice] = await ethers.getSigners()
+    await deployments.fixture(["test"])
+    ;[, alice] = await ethers.getSigners()
 
     WETH = (await ethers.getContract("WETH")) as WethMock
 
@@ -36,7 +36,7 @@ describe("PriceCalculator", async () => {
       "ETHCallPriceCalculator",
     )) as PriceCalculator
 
-    await WETH.connect(alice).deposit({ value: ethers.utils.parseEther("1000") })
+    await WETH.connect(alice).deposit({value: ethers.utils.parseEther("1000")})
     await WETH.connect(alice).approve(
       hegicPoolWETH.address,
       ethers.constants.MaxUint256,
@@ -48,7 +48,7 @@ describe("PriceCalculator", async () => {
         ethers.utils.parseEther("100"),
         true,
         0,
-    )
+      )
   })
 
   describe("constructor & settings", async () => {
@@ -116,19 +116,16 @@ describe("PriceCalculator", async () => {
               24 * 3600,
               ethers.utils.parseEther((utilized * 2).toString()),
               0,
-          )
+            )
         const x = await hegicPoolWETH.calculateTotalPremium(
           24 * 3600,
           ethers.utils.parseEther("10"),
           0,
         )
-        prices.push(
-          parseInt(x.premium.add(x.settlementFee).toString()) / 1e18,
-        )
+        prices.push(parseInt(x.premium.add(x.settlementFee).toString()) / 1e18)
       })
     after(() => {
       console.table(prices)
     })
   })
-
 })

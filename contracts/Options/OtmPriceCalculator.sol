@@ -27,20 +27,35 @@ contract OtmPriceCalculator is IPremiumCalculator, Ownable {
 
     uint256 public impliedVolRate0;
     uint256 public impliedVolRate1;
-    uint256 public border = 20;
+    uint256 public impliedVolRate2;
+    uint256 public impliedVolRate3;
+    uint256 public border0;
+    uint256 public border1;
+    uint256 public border2;
     uint256 public strikePercentage;
     // uint256 internal immutable priceDecimals;
     uint256 internal constant IVL_DECIMALS = 1e18;
     uint256 public settlementFeeShare = 0;
     uint256 public maxPeriod = 45 days;
     uint256 public minPeriod = 7 days;
-    uint8 roundedDecimals;
+    uint8 internal roundedDecimals;
     AggregatorV3Interface public priceProvider;
 
-    constructor(uint256 initialRate0, uint256 initialRate1, uint256 percentage, AggregatorV3Interface _priceProvider, uint8 _roundedDecimals) {
+    constructor(
+        uint256[4] memory initialRates,
+        uint256[3] memory initialBorders,
+        uint256 percentage,
+        AggregatorV3Interface _priceProvider,
+        uint8 _roundedDecimals
+    ) {
         priceProvider = _priceProvider;
-        impliedVolRate0 = initialRate0;
-        impliedVolRate1 = initialRate1;
+        impliedVolRate0 = initialRates[0];
+        impliedVolRate1 = initialRates[1];
+        impliedVolRate2 = initialRates[2];
+        impliedVolRate3 = initialRates[3];
+        border0 = initialBorders[0];
+        border1 = initialBorders[1];
+        border2 = initialBorders[2];
         strikePercentage = percentage;
         roundedDecimals = _roundedDecimals;
         // priceDecimals = 10**priceProvider.decimals();
@@ -49,10 +64,13 @@ contract OtmPriceCalculator is IPremiumCalculator, Ownable {
     /**
      * @notice Used for setting the period point after which
      * the price will be calculated with a different IVRate
-     * @param value The day number of the border
+     * @param values [i] The day number of the border
      **/
-    function setBorder(uint256 value) external onlyOwner {
-        border = value;
+    function setBorders(uint256[3] calldata values) external onlyOwner {
+        border0 = values[0];
+        border1 = values[1];
+        border2 = values[2];
+        emit SetBorders(values);
     }
 
     /**
@@ -63,26 +81,22 @@ contract OtmPriceCalculator is IPremiumCalculator, Ownable {
      * @param value The strike price from the current market price
      **/
     function setStrikePercentage(uint256 value) external onlyOwner {
-       strikePercentage = value;
+        strikePercentage = value;
+        emit SetStrikePercentage(value);
     }
 
     /**
      * @notice Used for adjusting the options prices (the premiums)
      * while balancing the asset's implied volatility rate.
-     * @param value New IVRate value
+     * @param values [i] New IVRate value
      **/
-    
-    function setImpliedVolRate0(uint256 value) external onlyOwner {
-        impliedVolRate0 = value;
-    }
 
-    /**
-     * @notice Used for adjusting the options prices (the premiums)
-     * while balancing the asset's implied volatility rate.
-     * @param value New IVRate value
-     **/
-    function setImpliedVolRate1(uint256 value) external onlyOwner {
-        impliedVolRate1 = value;
+    function setImpliedVolRates(uint256[4] calldata values) external onlyOwner {
+        impliedVolRate0 = values[0];
+        impliedVolRate1 = values[1];
+        impliedVolRate2 = values[2];
+        impliedVolRate3 = values[3];
+        emit SetImpliedVolRates(values);
     }
 
     /**
@@ -93,10 +107,13 @@ contract OtmPriceCalculator is IPremiumCalculator, Ownable {
     function setSettlementFeeShare(uint256 value) external onlyOwner {
         require(value <= 100, "The value is too large");
         settlementFeeShare = value;
+        emit SetSettlementFeeShare(value);
     }
 
-    function setMaxPeriod(uint256 value) external onlyOwner {
-        maxPeriod = value;
+    function setMaxPeriod(uint256 min, uint256 max) external onlyOwner {
+        maxPeriod = min;
+        maxPeriod = max;
+        emit SetPeriodLimits(min, max);
     }
 
     /**
@@ -113,45 +130,43 @@ contract OtmPriceCalculator is IPremiumCalculator, Ownable {
         uint256 strike
     ) public view override returns (uint256 premium) {
         uint256 currentPrice = _currentPrice();
-        uint256 otmStrike = round(currentPrice * strikePercentage / 100, roundedDecimals);
-        // uint256 remainder = otmStrike % 100e8;
-        // uint256 roundedStrike;
-        // remainder >= 50e8 ?
-
-        // roundedStrike = (otmStrike/1e10+1)*1e10 :
-        // roundedStrike = otmStrike/1e10*1e10;
-
-        require(period <= maxPeriod, "PriceCalculator: Period is too long");
-        require(period >= minPeriod, "PriceCalculator: Period is too short");
+        uint256 otmStrike =
+            round((currentPrice * strikePercentage) / 100, roundedDecimals);
 
         require(
-            strike == otmStrike,
-            "invalid strike"
+            period >= minPeriod,
+            "PriceCalculator: The period is too short"
         );
+        require(period <= maxPeriod, "PriceCalculator: The period is too long");
+
+        require(strike == otmStrike, "PriceCalculator: The strike is invalid");
         return _calculatePeriodFee(amount, period, strike);
     }
 
-    function round(uint value, uint8 decimals) public pure returns (uint roundedValue) {
-      uint a = value / 10 ** (decimals -1);
-      if(a%10 < 5) return a / 10 * 10**decimals;
-      return (a / 10 + 1) * 10**decimals;
+    function round(uint256 value, uint8 decimals)
+        public
+        pure
+        returns (uint256 roundedValue)
+    {
+        uint256 a = value / 10**(decimals - 1);
+        if (a % 10 < 5) return (a / 10) * 10**decimals;
+        return (a / 10 + 1) * 10**decimals;
     }
 
-    function _calculatePeriodFee(uint256 amount, uint256 period, uint256 strike)
-        internal
-        view
-        virtual
-        returns (uint256 fee)
-    {
-      if (period < 86400 * border) {
-        return
-            (amount * impliedVolRate0 * period.sqrt()) /
-            IVL_DECIMALS;
-      } else {
-        return
-            ( amount * impliedVolRate1 * period.sqrt()) /
-            IVL_DECIMALS;
-      }
+    function _calculatePeriodFee(
+        uint256 amount,
+        uint256 period,
+        uint256 /*strike*/
+    ) internal view virtual returns (uint256 fee) {
+        if (period <= 86400 * border0) {
+            return (amount * impliedVolRate0 * period.sqrt()) / IVL_DECIMALS;
+        } else if (period <= 86400 * border1) {
+            return (amount * impliedVolRate1 * period.sqrt()) / IVL_DECIMALS;
+        } else if (period <= 86400 * border2) {
+            return (amount * impliedVolRate2 * period.sqrt()) / IVL_DECIMALS;
+        } else if (period > 86400 * border2) {
+            return (amount * impliedVolRate3 * period.sqrt()) / IVL_DECIMALS;
+        }
     }
 
     /**

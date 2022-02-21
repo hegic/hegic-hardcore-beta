@@ -31,6 +31,7 @@ const fixture = deployments.createFixture(async ({deployments}) => {
 describe("HegicOperationalTreasury", async () => {
   let contracts: Awaited<ReturnType<typeof fixture>>
   const insuranceAmount = ethers.utils.parseUnits("900000", 6)
+  const stakingAmount = ethers.utils.parseUnits("90000000", 18)
 
   const getPoolState = () =>
     Promise.all([
@@ -57,6 +58,7 @@ describe("HegicOperationalTreasury", async () => {
       ),
     )
 
+    await contracts.HEGIC.mintTo(HegicStakeAndCover.address, stakingAmount)
     await contracts.USDC.mintTo(HegicStakeAndCover.address, insuranceAmount)
     await HegicStakeAndCover.saveFreeTokens()
   })
@@ -67,6 +69,7 @@ describe("HegicOperationalTreasury", async () => {
 
   describe("replenish, withdraw", async () => {
     const startBalance = ethers.utils.parseUnits("100000", 6)
+    const startHBalance = ethers.utils.parseUnits("10000000", 18)
     beforeEach(async () => {
       await contracts.USDC.mintTo(
         contracts.HegicOperationalTreasury.address,

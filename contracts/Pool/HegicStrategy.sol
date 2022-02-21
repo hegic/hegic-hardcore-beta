@@ -32,7 +32,7 @@ abstract contract HegicStrategy is Ownable, IHegicStrategy {
     IPremiumCalculator public pricer;
     uint256 internal immutable spotDecimals; // 1e18
 
-    uint256 private constant K_DECIMALS = 100; // 1e6
+    uint256 private constant K_DECIMALS = 100;
     uint256 public k = 100;
 
     struct StrategyData {
@@ -64,6 +64,7 @@ abstract contract HegicStrategy is Ownable, IHegicStrategy {
      **/
     function setLimit(uint256 value) external onlyOwner {
         lockedLimit = value;
+        emit SetLimit(value);
     }
 
     /**
@@ -77,6 +78,28 @@ abstract contract HegicStrategy is Ownable, IHegicStrategy {
         returns (uint256 amount)
     {
         return pool.lockedByStrategy(address(this));
+    }
+
+    function _getAvailableContracts(uint32 period, uint256 strike)
+        internal
+        view
+        virtual
+        returns (uint256 available)
+    {
+        uint256 totalAvailableBalance =
+            pool.getStakeAndCoverBalance() +
+                pool.totalBalance() -
+                pool.totalLocked() -
+                pool.lockedPremium();
+        uint256 availableBalance =
+            lockedLimit - pool.lockedByStrategy(address(this));
+        if (strike == 0) strike = _currentPrice();
+        uint256 lockedAmount =
+            _calculateLockedAmount(uint128(spotDecimals), period, strike);
+        if (availableBalance > totalAvailableBalance) {
+            return (totalAvailableBalance * spotDecimals) / lockedAmount;
+        }
+        return (availableBalance * spotDecimals) / lockedAmount;
     }
 
     /**
@@ -106,6 +129,7 @@ abstract contract HegicStrategy is Ownable, IHegicStrategy {
         uint32 expiration = uint32(block.timestamp + period);
         id = pool.lockLiquidityFor(holder, lockedAmount, expiration);
         strategyData[id] = StrategyData(uint128(amount), uint128(strike));
+        emit Acquired(id, amount, premium, strike, expiration);
     }
 
     /**
@@ -145,6 +169,15 @@ abstract contract HegicStrategy is Ownable, IHegicStrategy {
     ) internal view virtual returns (uint256 premium) {
         if (strike == 0) strike = _currentPrice();
         premium = pricer.calculatePremium(period, amount, strike);
+    }
+
+    function calculatePremium(
+        uint32 period,
+        uint256 amount,
+        uint256 strike
+    ) external view returns (uint256 premium, uint256 available) {
+        premium = _calculatePremium(period, amount, strike);
+        available = _getAvailableContracts(period, strike);
     }
 
     function _profitOf(uint256 optionID)

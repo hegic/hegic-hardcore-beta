@@ -14,7 +14,7 @@ async function deployment(hre: HardhatRuntimeEnvironment): Promise<void> {
   const params = {
     token: USDC.address,
     manager: optionsManger.address,
-    maxReservation: 3600 * 24 * 30,
+    maxReservation: 3600 * 24 * 45,
     insurance: HegicStakeAndCover.address,
     baseAmount: utils.parseUnits("100000", 6),
   }

@@ -32,8 +32,7 @@ contract HegicStrategyStraddle is HegicStrategy {
         IPremiumCalculator _pricer,
         uint8 _spotDecimals,
         uint256 limit
-    ) HegicStrategy(_pool, _priceProvider, _pricer, 10, limit, _spotDecimals) {
-    }
+    ) HegicStrategy(_pool, _priceProvider, _pricer, 10, limit, _spotDecimals) {}
 
     function _profitOf(uint256 optionID)
         internal
@@ -74,5 +73,4 @@ contract HegicStrategyStraddle is HegicStrategy {
             spotDecimals /
             1e8;
     }
-
 }

@@ -34,7 +34,7 @@ contract HegicOperationalTreasury is IHegicOperationalTreasury, AccessControl {
     mapping(address => uint256) public override lockedByStrategy;
     uint256 public override benchmark;
 
-    uint256 public lockedPremium;
+    uint256 public override lockedPremium;
     uint256 public override totalLocked;
     uint256 public override totalBalance;
     uint256 public maxLockupPeriod;
@@ -75,6 +75,15 @@ contract HegicOperationalTreasury is IHegicOperationalTreasury, AccessControl {
         _replenish(0);
     }
 
+    function getStakeAndCoverBalance()
+        external
+        view
+        override
+        returns (uint256 balance)
+    {
+        return stakeandcoverPool.availableBalance();
+    }
+
     /**
      * @notice Used for locking liquidity in an active options strategy
      * @param holder The option strategy holder address
@@ -88,14 +97,17 @@ contract HegicOperationalTreasury is IHegicOperationalTreasury, AccessControl {
     ) external override onlyRole(STRATEGY_ROLE) returns (uint256 optionID) {
         totalLocked += amount;
         uint128 premium = uint128(_addTokens());
-        uint256 availableBalance =
-            totalBalance + stakeandcoverPool.availableBalance() - lockedPremium;
-        require(totalLocked <= availableBalance, "The amount is too large");
+        lockedPremium += premium;
+
+        require(
+            totalLocked + lockedPremium <=
+                totalBalance + stakeandcoverPool.availableBalance(),
+            "The amount is too large"
+        );
         require(
             block.timestamp + maxLockupPeriod >= expiration,
             "The period is too long"
         );
-        lockedPremium += premium;
         lockedByStrategy[msg.sender] += amount;
         optionID = manager.createOptionFor(holder);
         lockedLiquidity[optionID] = LockedLiquidity(
@@ -125,7 +137,7 @@ contract HegicOperationalTreasury is IHegicOperationalTreasury, AccessControl {
         ll.state = LockedLiquidityState.Unlocked;
         totalLocked -= ll.amount;
         lockedPremium -= ll.premium;
-        lockedByStrategy[msg.sender] -= ll.amount;
+        lockedByStrategy[ll.strategy] -= ll.amount;
     }
 
     /**
@@ -178,7 +190,7 @@ contract HegicOperationalTreasury is IHegicOperationalTreasury, AccessControl {
 
     function _replenish(uint256 additionalAmount) internal {
         uint256 transferAmount =
-            benchmark + additionalAmount - totalBalance + lockedPremium;
+            benchmark + additionalAmount + lockedPremium - totalBalance;
         stakeandcoverPool.payOut(transferAmount);
         totalBalance += transferAmount;
         emit Replenished(transferAmount);
@@ -198,12 +210,15 @@ contract HegicOperationalTreasury is IHegicOperationalTreasury, AccessControl {
     }
 
     function _addTokens() private returns (uint256 amount) {
-        amount = token.balanceOf(address(this)) - totalBalance - lockedPremium;
+        amount = token.balanceOf(address(this)) - totalBalance;
         totalBalance += amount;
     }
 
     function _withdraw(address to, uint256 amount) private {
-        require(amount + totalLocked <= totalBalance);
+        require(
+            amount + totalLocked + lockedPremium <= totalBalance,
+            "The amount to withdraw is too large"
+        );
         totalBalance -= amount;
         token.transfer(to, amount);
     }

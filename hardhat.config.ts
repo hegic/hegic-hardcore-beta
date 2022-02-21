@@ -77,7 +77,7 @@ const config: HardhatUserConfig = {
   },
   mocha: {
     // reporter: "nyan",
-    forbidOnly: true,
+    forbidOnly: !Boolean(process.env.DEV),
   },
   gasReporter: {
     currency: "USD",

@@ -1,16 +1,16 @@
-import { ethers, deployments } from "hardhat"
-import { BigNumber as BN, Signer } from "ethers"
-import { solidity } from "ethereum-waffle"
+import {ethers, deployments} from "hardhat"
+import {BigNumber as BN, Signer} from "ethers"
+import {solidity} from "ethereum-waffle"
 import chai from "chai"
-import { Facade } from "../../typechain/Facade"
-import { HegicPool } from "../../typechain/HegicPool"
-import { WethMock } from "../../typechain/WethMock"
-import { Erc20Mock as ERC20 } from "../../typechain/Erc20Mock"
-import { AggregatorV3Interface } from "../../typechain/AggregatorV3Interface"
-import { OptionsManager } from "../../typechain/OptionsManager"
+import {Facade} from "../../typechain/Facade"
+import {HegicPool} from "../../typechain/HegicPool"
+import {WethMock} from "../../typechain/WethMock"
+import {Erc20Mock as ERC20} from "../../typechain/Erc20Mock"
+import {AggregatorV3Interface} from "../../typechain/AggregatorV3Interface"
+import {OptionsManager} from "../../typechain/OptionsManager"
 
 chai.use(solidity)
-const { expect } = chai
+const {expect} = chai
 const ONE_DAY = BN.from(86400)
 const optionType = {
   PUT: 1,
@@ -30,7 +30,7 @@ describe("Facade", async () => {
 
   beforeEach(async () => {
     await deployments.fixture(["test"])
-      ;[, alice] = await ethers.getSigners()
+    ;[, alice] = await ethers.getSigners()
 
     // router = (await ethers.getContract("UniswapRouterMock")) as Uniswap
     facade = (await ethers.getContract("Facade")) as Facade
@@ -51,7 +51,7 @@ describe("Facade", async () => {
     HegicATMCALL_WETH.grantRole(SELLER_ROLE, facade.address)
     HegicATMPUT_WETH.grantRole(SELLER_ROLE, facade.address)
 
-    await WETH.connect(alice).deposit({ value: ethers.utils.parseUnits("100") })
+    await WETH.connect(alice).deposit({value: ethers.utils.parseUnits("100")})
 
     await WBTC.mintTo(
       await alice.getAddress(),
@@ -211,7 +211,7 @@ describe("Facade", async () => {
           2500e8,
           [USDC.address, WETH.address],
           ethers.constants.MaxUint256,
-      )
+        )
       await ethPriceFeed.setPrice(3000e8)
       await HegicATMCALL_WETH.connect(alice).exercise(0)
     })
@@ -233,7 +233,7 @@ describe("Facade", async () => {
           2500e8,
           [USDC.address],
           ethers.constants.MaxUint256,
-      )
+        )
       await ethPriceFeed.setPrice(2000e8)
       await HegicATMPUT_WETH.connect(alice).exercise(0)
     })
@@ -270,7 +270,7 @@ describe("Facade", async () => {
           2500e8,
           [USDC.address, WETH.address],
           ethers.constants.MaxUint256,
-      )
+        )
       await manager.connect(alice).setApprovalForAll(facade.address, true)
       await ethPriceFeed.setPrice(3000e8)
       await expect(facade.exercise(0)).to.be.revertedWith(

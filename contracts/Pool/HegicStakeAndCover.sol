@@ -20,11 +20,14 @@ pragma solidity 0.8.6;
  **/
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./IHegicStakeAndCover.sol";
 import "hardhat/console.sol";
 
 contract HegicStakeAndCover is IHegicStakeAndCover, AccessControl {
+    using SafeERC20 for IERC20;
+
     IERC20 public immutable hegicToken;
     IERC20 public immutable baseToken;
     mapping(address => uint256) public balanceOf;
@@ -52,7 +55,7 @@ contract HegicStakeAndCover is IHegicStakeAndCover, AccessControl {
         external
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
-        baseToken.transfer(to, amount);
+        baseToken.safeTransfer(to, amount);
     }
 
     function availableBalance() external view override returns (uint256) {
@@ -69,7 +72,7 @@ contract HegicStakeAndCover is IHegicStakeAndCover, AccessControl {
         override
         onlyRole(HEGIC_POOL_ROLE)
     {
-        baseToken.transfer(msg.sender, amount);
+        baseToken.safeTransfer(msg.sender, amount);
     }
 
     /**
@@ -80,6 +83,7 @@ contract HegicStakeAndCover is IHegicStakeAndCover, AccessControl {
         uint256 amount = hegicToken.balanceOf(address(this)) - totalBalance;
         totalBalance += amount;
         balanceOf[unlockedTokenRecipient] += amount;
+        startBalance[unlockedTokenRecipient] = shareOf(unlockedTokenRecipient);
     }
 
     /**
@@ -99,7 +103,7 @@ contract HegicStakeAndCover is IHegicStakeAndCover, AccessControl {
      * @param account The user address
      * @param amount The share size
      **/
-    function trasferShare(address account, uint256 amount) external {
+    function transferShare(address account, uint256 amount) external {
         require(profitOf(msg.sender) == 0);
         require(profitOf(account) == 0);
         balanceOf[msg.sender] -= amount;
@@ -117,10 +121,7 @@ contract HegicStakeAndCover is IHegicStakeAndCover, AccessControl {
         view
         returns (uint256 profitAmount)
     {
-        return
-            (balanceOf[account] * baseToken.balanceOf(address(this))) /
-            totalBalance -
-            startBalance[account];
+        return shareOf(account) - startBalance[account];
     }
 
     /**
@@ -167,28 +168,33 @@ contract HegicStakeAndCover is IHegicStakeAndCover, AccessControl {
         uint256 liquidityShare =
             (amount * baseToken.balanceOf(address(this))) / totalBalance;
         balanceOf[account] -= amount;
-        startBalance[account] =
-            (balanceOf[account] * baseToken.balanceOf(address(this))) /
-            totalBalance;
+        startBalance[account] = shareOf(account);
         totalBalance -= amount;
-        hegicToken.transfer(hegicDestination, amount);
-        baseToken.transfer(account, liquidityShare);
+        hegicToken.safeTransfer(hegicDestination, amount);
+        baseToken.safeTransfer(account, liquidityShare);
         emit Withdrawn(msg.sender, hegicDestination, amount, liquidityShare);
     }
 
     /**
      * @notice Used for depositing tokens into the contract
+     *         HegicStakeAndCover should first be initialized with 'saveFreeTokens()'
+     *         before making any deposits into the contract
      * @param amount The amount of tokens
      **/
     function provide(uint256 amount) external {
         if (profitOf(msg.sender) > 0) claimProfit();
+        uint256 baseBalance = baseToken.balanceOf(address(this));
+        require(
+            baseBalance > 0 && totalBalance > 0,
+            "The pool should first be initialized"
+        );
         uint256 liquidityShare =
             (amount * baseToken.balanceOf(address(this))) / totalBalance;
         balanceOf[msg.sender] += amount;
         startBalance[msg.sender] = shareOf(msg.sender);
         totalBalance += amount;
-        hegicToken.transferFrom(msg.sender, address(this), amount);
-        baseToken.transferFrom(msg.sender, address(this), liquidityShare);
+        hegicToken.safeTransferFrom(msg.sender, address(this), amount);
+        baseToken.safeTransferFrom(msg.sender, address(this), liquidityShare);
         emit Provided(msg.sender, amount, liquidityShare);
     }
 }

@@ -147,6 +147,7 @@ abstract contract HegicPool is
         external
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
+        require(value < 100, "The value is too large");
         collateralizationRatio = value;
     }
 
@@ -246,7 +247,7 @@ abstract contract HegicPool is
      * accrued during the period of holding the option contract.
      * @param id ID of ERC721 token linked to the option
      **/
-    function exercise(uint256 id) external override {
+    function exercise(uint256 id) external override nonReentrant {
         Option storage option = options[id];
         uint256 profit = _profitOf(option);
         require(
@@ -358,28 +359,6 @@ abstract contract HegicPool is
      * @return amount The amount received after the withdrawal
      **/
     function withdraw(uint256 trancheID)
-        external
-        override
-        nonReentrant
-        returns (uint256 amount)
-    {
-        address owner = ownerOf(trancheID);
-        Tranche memory t = tranches[trancheID];
-        amount = _withdraw(owner, trancheID);
-        emit Withdrawn(owner, trancheID, amount);
-    }
-
-    /**
-     * @notice Used for withdrawing the funds from the pool
-     * by the hedged liquidity tranches providers
-     * in case of an urgent need to withdraw the liquidity
-     * without receiving the loss compensation from
-     * the hedging pool: the net difference between
-     * the amount deposited and the withdrawal amount.
-     * @param trancheID ID of liquidity tranche
-     * @return amount The amount received after the withdrawal
-     **/
-    function withdrawWithoutHedge(uint256 trancheID)
         external
         override
         nonReentrant

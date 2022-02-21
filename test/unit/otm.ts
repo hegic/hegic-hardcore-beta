@@ -33,27 +33,33 @@ const fixture = deployments.createFixture(async ({deployments}) => {
     deployer,
     alice,
     hegicOtmCallETH: (await ethers.getContract(
-      "HegicOtmStrategyCallETH",
+      "HegicStrategyOTM_CALL_110_ETH",
     )) as HegicStrategyCall,
     hegicOtmCallBTC: (await ethers.getContract(
-      "HegicOtmStrategyCallBTC",
+      "HegicStrategyOTM_CALL_110_BTC",
     )) as HegicStrategyCall,
     hegicOtmPutETH: (await ethers.getContract(
-      "HegicOtmStrategyPutETH",
+      "HegicStrategyOTM_PUT_90_ETH",
     )) as HegicStrategyPut,
     hegicOtmPutBTC: (await ethers.getContract(
-      "HegicOtmStrategyPutBTC",
+      "HegicStrategyOTM_PUT_90_BTC",
     )) as HegicStrategyPut,
 
     USDC: (await ethers.getContract("USDC")) as ERC20,
     WETH: (await ethers.getContract("WETH")) as ERC20,
     WBTC: (await ethers.getContract("WBTC")) as ERC20,
 
-    pricerETH: (await ethers.getContract(
-      "PriceCalculatorOtmETH",
+    pricerETH_OTM_CALL_110: (await ethers.getContract(
+      "PriceCalculatorOTM_CALL_110_ETH",
     )) as OtmPriceCalculator,
-    pricerBTC: (await ethers.getContract(
-      "PriceCalculatorOtmBTC",
+    pricerBTC_OTM_CALL_110: (await ethers.getContract(
+      "PriceCalculatorOTM_CALL_110_BTC",
+    )) as OtmPriceCalculator,
+    pricerETH_OTM_PUT_90: (await ethers.getContract(
+      "PriceCalculatorOTM_PUT_90_ETH",
+    )) as OtmPriceCalculator,
+    pricerBTC_OTM_PUT_90: (await ethers.getContract(
+      "PriceCalculatorOTM_PUT_90_BTC",
     )) as OtmPriceCalculator,
     ethPriceFeed: (await ethers.getContract(
       "PriceProviderETH",
@@ -125,15 +131,18 @@ describe("HegicPoolOTM", async () => {
         WETH,
         ethPriceFeed,
         hegicOtmCallETH,
-        pricerETH,
+        pricerETH_OTM_CALL_110,
       } = contracts
       let percent = 110
       let currentPrice = 3200e8
       let period = 86400 * 7
       let strike = round(currentPrice, percent, 100)
-      await pricerETH.connect(deployer).setStrategy(hegicOtmCallETH.address)
+      // await pricerETH_OTM_CALL_110.connect(deployer).setStrategy(hegicOtmCallETH.address)
       let balance_alice_before = await USDC.balanceOf(await alice.getAddress())
       await ethPriceFeed.setPrice(currentPrice)
+      await pricerETH_OTM_CALL_110
+        .connect(deployer)
+        .setImpliedVolRates([80000, 800000, 800000, 800000])
       await hegicOtmCallETH
         .connect(alice)
         .buy(
@@ -168,13 +177,13 @@ describe("HegicPoolOTM", async () => {
         WETH,
         ethPriceFeed,
         hegicOtmCallETH,
-        pricerETH,
+        pricerETH_OTM_CALL_110,
       } = contracts
       let percent = 110
       let currentPrice = 3200e8
       let period = 86400 * 7
       let strike = round(currentPrice, percent, 100)
-      await pricerETH.connect(deployer).setStrategy(hegicOtmCallETH.address)
+      // await pricerETH_OTM_CALL_110.connect(deployer).setStrategy(hegicOtmCallETH.address)
       let balance_alice_before = await USDC.balanceOf(await alice.getAddress())
       await ethPriceFeed.setPrice(currentPrice)
       await hegicOtmCallETH
@@ -202,13 +211,13 @@ describe("HegicPoolOTM", async () => {
         WETH,
         ethPriceFeed,
         hegicOtmCallETH,
-        pricerETH,
+        pricerETH_OTM_CALL_110,
       } = contracts
       let percent = 110
       let currentPrice = 3200e8
       let period = 86400 * 7
       let strike = round(currentPrice, percent, 100)
-      await pricerETH.connect(deployer).setStrategy(hegicOtmCallETH.address)
+      // await pricerETH_OTM_CALL_110.connect(deployer).setStrategy(hegicOtmCallETH.address)
       let balance_alice_before = await USDC.balanceOf(await alice.getAddress())
       await ethPriceFeed.setPrice(currentPrice)
       await hegicOtmCallETH
@@ -236,13 +245,13 @@ describe("HegicPoolOTM", async () => {
         WETH,
         ethPriceFeed,
         hegicOtmCallETH,
-        pricerETH,
+        pricerETH_OTM_CALL_110,
       } = contracts
       let percent = 110
       let currentPrice = 3200e8
       let period = 86400 * 6 + 86399
       let strike = round(currentPrice, percent, 100)
-      await pricerETH.connect(deployer).setStrategy(hegicOtmCallETH.address)
+      // await pricerETH_OTM_CALL_110.connect(deployer).setStrategy(hegicOtmCallETH.address)
       let balance_alice_before = await USDC.balanceOf(await alice.getAddress())
       await ethPriceFeed.setPrice(currentPrice)
       await expect(
@@ -265,13 +274,13 @@ describe("HegicPoolOTM", async () => {
         WETH,
         ethPriceFeed,
         hegicOtmCallETH,
-        pricerETH,
+        pricerETH_OTM_CALL_110,
       } = contracts
       let percent = 110
       let currentPrice = 3200e8
       let period = 86400 * 45 + 1
       let strike = round(currentPrice, percent, 100)
-      await pricerETH.connect(deployer).setStrategy(hegicOtmCallETH.address)
+      // await pricerETH_OTM_CALL_110.connect(deployer).setStrategy(hegicOtmCallETH.address)
       let balance_alice_before = await USDC.balanceOf(await alice.getAddress())
       await ethPriceFeed.setPrice(currentPrice)
       await expect(
@@ -294,15 +303,16 @@ describe("HegicPoolOTM", async () => {
         WETH,
         ethPriceFeed,
         hegicOtmCallETH,
-        pricerETH,
+        pricerETH_OTM_CALL_110,
       } = contracts
-      await pricerETH.connect(deployer).setImpliedVolRate0(80000)
-      await pricerETH.connect(deployer).setImpliedVolRate1(800000)
+      await pricerETH_OTM_CALL_110
+        .connect(deployer)
+        .setImpliedVolRates([80000, 800000, 800000, 800000])
       let percent = 110
       let currentPrice = 3200e8
       let period = 86400 * 20
       let strike = round(currentPrice, percent, 100)
-      await pricerETH.connect(deployer).setStrategy(hegicOtmCallETH.address)
+      // await pricerETH_OTM_CALL_110.connect(deployer).setStrategy(hegicOtmCallETH.address)
       let balance_alice_before = await USDC.balanceOf(await alice.getAddress())
       await ethPriceFeed.setPrice(currentPrice)
       await hegicOtmCallETH
@@ -327,15 +337,21 @@ describe("HegicPoolOTM", async () => {
         WETH,
         ethPriceFeed,
         hegicOtmCallETH,
-        pricerETH,
+        pricerETH_OTM_CALL_110,
         HegicOperationalTreasury,
       } = contracts
       let percent = 110
       let currentPrice = 3200e8
       let period = 86400 * 7
       let strike = round(currentPrice, percent, 100)
-      await pricerETH.connect(deployer).setStrategy(hegicOtmCallETH.address)
+      // await pricerETH_OTM_CALL_110.connect(deployer).setStrategy(hegicOtmCallETH.address)
       await ethPriceFeed.setPrice(currentPrice)
+      await pricerETH_OTM_CALL_110.setImpliedVolRates([
+        80000,
+        80000,
+        80000,
+        80000,
+      ])
       await hegicOtmCallETH
         .connect(alice)
         .buy(
@@ -359,18 +375,22 @@ describe("HegicPoolOTM", async () => {
         WETH,
         ethPriceFeed,
         hegicOtmCallETH,
-        pricerETH,
+        pricerETH_OTM_CALL_110,
       } = contracts
       await hegicOtmCallETH.setLimit(
         ethers.utils.parseUnits("1000000", await contracts.USDC.decimals()),
       )
-      await pricerETH.connect(deployer).setImpliedVolRate1(BN.from("800000"))
+      await pricerETH_OTM_CALL_110
+        .connect(deployer)
+        .setImpliedVolRates(["92000", "92000", "92000", "92000"])
       let percent = 110
       let currentPrice = 3200e8
       let period = 86400 * 30
       let strike = round(currentPrice, percent, 100)
-      await pricerETH.connect(deployer).setStrikePercentage(BN.from(percent))
-      await pricerETH.connect(deployer).setStrategy(hegicOtmCallETH.address)
+      await pricerETH_OTM_CALL_110
+        .connect(deployer)
+        .setStrikePercentage(BN.from(percent))
+      // await pricerETH_OTM_CALL_110.connect(deployer).setStrategy(hegicOtmCallETH.address)
       let balance_alice_before = await USDC.balanceOf(await alice.getAddress())
       await ethPriceFeed.setPrice(currentPrice)
       await hegicOtmCallETH
@@ -383,7 +403,7 @@ describe("HegicPoolOTM", async () => {
         )
       let balance_alice_after = await USDC.balanceOf(await alice.getAddress())
       let balance_diff = balance_alice_before.sub(balance_alice_after)
-      expect(balance_diff).to.be.above(BN.from(514880e6))
+      expect(balance_diff).to.be.above(BN.from(59211e6))
     })
 
     it("exceeds the limit", async () => {
@@ -394,19 +414,23 @@ describe("HegicPoolOTM", async () => {
         WETH,
         ethPriceFeed,
         hegicOtmCallETH,
-        pricerETH,
+        pricerETH_OTM_CALL_110,
       } = contracts
       await hegicOtmCallETH.setLimit(
         ethers.utils.parseUnits("1000000", await contracts.USDC.decimals()),
       )
-      await pricerETH.connect(deployer).setImpliedVolRate1(BN.from("800000"))
-      await pricerETH.connect(deployer).setUtilizationRate(0)
+      await pricerETH_OTM_CALL_110
+        .connect(deployer)
+        .setImpliedVolRates(["800000", "800000", "800000", "800000"])
+      // await pricerETH_OTM_CALL_110.connect(deployer).setUtilizationRate(0)
       let percent = 110
       let currentPrice = 3200e8
       let period = 86400 * 30
       let strike = round(currentPrice, percent, 100)
-      await pricerETH.connect(deployer).setStrikePercentage(BN.from(percent))
-      await pricerETH.connect(deployer).setStrategy(hegicOtmCallETH.address)
+      await pricerETH_OTM_CALL_110
+        .connect(deployer)
+        .setStrikePercentage(BN.from(percent))
+      // await pricerETH_OTM_CALL_110.connect(deployer).setStrategy(hegicOtmCallETH.address)
       await ethPriceFeed.setPrice(currentPrice)
       expect(
         hegicOtmCallETH
@@ -428,20 +452,24 @@ describe("HegicPoolOTM", async () => {
         WETH,
         ethPriceFeed,
         hegicOtmCallETH,
-        pricerETH,
+        pricerETH_OTM_CALL_110,
       } = contracts
       await hegicOtmCallETH.setLimit(
         ethers.utils.parseUnits("1000000", await contracts.USDC.decimals()),
       )
-      await pricerETH.connect(deployer).setImpliedVolRate1(BN.from("800000"))
-      await pricerETH.connect(deployer).setUtilizationRate(0)
+      await pricerETH_OTM_CALL_110
+        .connect(deployer)
+        .setImpliedVolRates([800000, 800000, 800000, 800000])
+      // await pricerETH_OTM_CALL_110.connect(deployer).setUtilizationRate(0)
       let percent = 110
       let currentPrice = 3200e8
       let period = 86400 * 30
       let strike = round(currentPrice, percent, 100)
       let new_eth_price = 4500e8
-      await pricerETH.connect(deployer).setStrikePercentage(BN.from(percent))
-      await pricerETH.connect(deployer).setStrategy(hegicOtmCallETH.address)
+      await pricerETH_OTM_CALL_110
+        .connect(deployer)
+        .setStrikePercentage(BN.from(percent))
+      // await pricerETH_OTM_CALL_110.connect(deployer).setStrategy(hegicOtmCallETH.address)
       await ethPriceFeed.setPrice(currentPrice)
       await hegicOtmCallETH
         .connect(alice)
@@ -465,20 +493,24 @@ describe("HegicPoolOTM", async () => {
         WETH,
         ethPriceFeed,
         hegicOtmCallETH,
-        pricerETH,
+        pricerETH_OTM_CALL_110,
         HegicOperationalTreasury,
       } = contracts
       await hegicOtmCallETH.setLimit(
         ethers.utils.parseUnits("100000", await contracts.USDC.decimals()),
       )
-      await pricerETH.connect(deployer).setImpliedVolRate1(BN.from("800000"))
-      await pricerETH.connect(deployer).setUtilizationRate(0)
+      await pricerETH_OTM_CALL_110
+        .connect(deployer)
+        .setImpliedVolRates([92000, 92000, 92000, 92000])
+      // await pricerETH_OTM_CALL_110.connect(deployer).setUtilizationRate(0)
       let percent = 110
       let currentPrice = 3200e8
       let period = 86400 * 30
       let strike = round(currentPrice, percent, 100)
-      await pricerETH.connect(deployer).setStrikePercentage(BN.from(percent))
-      await pricerETH.connect(deployer).setStrategy(hegicOtmCallETH.address)
+      await pricerETH_OTM_CALL_110
+        .connect(deployer)
+        .setStrikePercentage(BN.from(percent))
+      // await pricerETH_OTM_CALL_110.connect(deployer).setStrategy(hegicOtmCallETH.address)
       await ethPriceFeed.setPrice(currentPrice)
       await hegicOtmCallETH.setK(200)
       await hegicOtmCallETH
@@ -493,7 +525,176 @@ describe("HegicPoolOTM", async () => {
         await HegicOperationalTreasury.lockedByStrategy(
           hegicOtmCallETH.address,
         ),
-      ).to.be.eq(BN.from(25744e6))
+      ).to.be.eq(BN.from(2960.56e6))
+    })
+
+    it("Should use IVRate0 if period <= 10 days", async () => {
+      const {
+        alice,
+        deployer,
+        USDC,
+        WETH,
+        ethPriceFeed,
+        hegicOtmCallETH,
+        pricerETH_OTM_CALL_110,
+        HegicOperationalTreasury,
+      } = contracts
+      await hegicOtmCallETH.setLimit(
+        ethers.utils.parseUnits("100000", await contracts.USDC.decimals()),
+      )
+
+      await pricerETH_OTM_CALL_110
+        .connect(deployer)
+        .setImpliedVolRates([50000, 60000, 70000, 80000])
+      let percent = 110
+      let currentPrice = 3200e8
+      let period = 86400 * 10
+      let strike = round(currentPrice, percent, 100)
+      await pricerETH_OTM_CALL_110
+        .connect(deployer)
+        .setStrikePercentage(BN.from(percent))
+      // await pricerETH_OTM_CALL_110.connect(deployer).setStrategy(hegicOtmCallETH.address)
+      await ethPriceFeed.setPrice(currentPrice)
+      await hegicOtmCallETH.setK(100)
+      await hegicOtmCallETH
+        .connect(alice)
+        .buy(
+          await alice.getAddress(),
+          period,
+          BN.from(ethers.utils.parseUnits("10", await WETH.decimals())),
+          strike,
+        )
+      expect(
+        await HegicOperationalTreasury.lockedByStrategy(
+          hegicOtmCallETH.address,
+        ),
+      ).to.be.eq(BN.from(464.5e6))
+    })
+
+    it("Should use IVRate1 if period > 12 days", async () => {
+      const {
+        alice,
+        deployer,
+        USDC,
+        WETH,
+        ethPriceFeed,
+        hegicOtmCallETH,
+        pricerETH_OTM_CALL_110,
+        HegicOperationalTreasury,
+      } = contracts
+      await hegicOtmCallETH.setLimit(
+        ethers.utils.parseUnits("100000", await contracts.USDC.decimals()),
+      )
+      await pricerETH_OTM_CALL_110
+        .connect(deployer)
+        .setImpliedVolRates([60000, 150000, 60000, 60000])
+      let percent = 110
+      let currentPrice = 3200e8
+      let period = 86400 * 13
+      let strike = round(currentPrice, percent, 100)
+      await pricerETH_OTM_CALL_110
+        .connect(deployer)
+        .setStrikePercentage(BN.from(percent))
+      // await pricerETH_OTM_CALL_110.connect(deployer).setStrategy(hegicOtmCallETH.address)
+      await ethPriceFeed.setPrice(currentPrice)
+      await hegicOtmCallETH.setK(100)
+      await hegicOtmCallETH
+        .connect(alice)
+        .buy(
+          await alice.getAddress(),
+          period,
+          BN.from(ethers.utils.parseUnits("10", await WETH.decimals())),
+          strike,
+        )
+      expect(
+        await HegicOperationalTreasury.lockedByStrategy(
+          hegicOtmCallETH.address,
+        ),
+      ).to.be.eq(BN.from(1588.5e6))
+    })
+
+    it("Should use IVRate2 if period > 20 days", async () => {
+      const {
+        alice,
+        deployer,
+        USDC,
+        WETH,
+        ethPriceFeed,
+        hegicOtmCallETH,
+        pricerETH_OTM_CALL_110,
+        HegicOperationalTreasury,
+      } = contracts
+      await hegicOtmCallETH.setLimit(
+        ethers.utils.parseUnits("100000", await contracts.USDC.decimals()),
+      )
+      await pricerETH_OTM_CALL_110
+        .connect(deployer)
+        .setImpliedVolRates([50000, 60000, 70000, 80000])
+      let percent = 110
+      let currentPrice = 3200e8
+      let period = 86400 * 21
+      let strike = round(currentPrice, percent, 100)
+      await pricerETH_OTM_CALL_110
+        .connect(deployer)
+        .setStrikePercentage(BN.from(percent))
+      // await pricerETH_OTM_CALL_110.connect(deployer).setStrategy(hegicOtmCallETH.address)
+      await ethPriceFeed.setPrice(currentPrice)
+      await hegicOtmCallETH.setK(100)
+      await hegicOtmCallETH
+        .connect(alice)
+        .buy(
+          await alice.getAddress(),
+          period,
+          BN.from(ethers.utils.parseUnits("10", await WETH.decimals())),
+          strike,
+        )
+      expect(
+        await HegicOperationalTreasury.lockedByStrategy(
+          hegicOtmCallETH.address,
+        ),
+      ).to.be.eq(BN.from(942.2e6))
+    })
+
+    it("Should use IVRate3 if period > 30 days", async () => {
+      const {
+        alice,
+        deployer,
+        USDC,
+        WETH,
+        ethPriceFeed,
+        hegicOtmCallETH,
+        pricerETH_OTM_CALL_110,
+        HegicOperationalTreasury,
+      } = contracts
+      await hegicOtmCallETH.setLimit(
+        ethers.utils.parseUnits("100000", await contracts.USDC.decimals()),
+      )
+      await pricerETH_OTM_CALL_110
+        .connect(deployer)
+        .setImpliedVolRates([50000, 60000, 70000, 80000])
+      let percent = 110
+      let currentPrice = 3200e8
+      let period = 86400 * 31
+      let strike = round(currentPrice, percent, 100)
+      await pricerETH_OTM_CALL_110
+        .connect(deployer)
+        .setStrikePercentage(BN.from(percent))
+      // await pricerETH_OTM_CALL_110.connect(deployer).setStrategy(hegicOtmCallETH.address)
+      await ethPriceFeed.setPrice(currentPrice)
+      await hegicOtmCallETH.setK(100)
+      await hegicOtmCallETH
+        .connect(alice)
+        .buy(
+          await alice.getAddress(),
+          period,
+          BN.from(ethers.utils.parseUnits("10", await WETH.decimals())),
+          strike,
+        )
+      expect(
+        await HegicOperationalTreasury.lockedByStrategy(
+          hegicOtmCallETH.address,
+        ),
+      ).to.be.eq(BN.from(1308.8e6))
     })
   })
 
@@ -506,14 +707,22 @@ describe("HegicPoolOTM", async () => {
         WETH,
         ethPriceFeed,
         hegicOtmPutETH,
-        pricerETH,
+        pricerETH_OTM_PUT_90,
       } = contracts
       let percent = 90
       let currentPrice = 3200e8
       let period = 86400 * 7
       let strike = round(currentPrice, percent, 100)
-      await pricerETH.connect(deployer).setStrikePercentage(BN.from(percent))
-      await pricerETH.connect(deployer).setStrategy(hegicOtmPutETH.address)
+      await pricerETH_OTM_PUT_90.setImpliedVolRates([
+        80000,
+        80000,
+        80000,
+        80000,
+      ])
+      await pricerETH_OTM_PUT_90
+        .connect(deployer)
+        .setStrikePercentage(BN.from(percent))
+      // await pricerETH_OTM_PUT_90.connect(deployer).setStrategy(hegicOtmPutETH.address)
       let balance_alice_before = await USDC.balanceOf(await alice.getAddress())
       await ethPriceFeed.setPrice(currentPrice)
       await hegicOtmPutETH
@@ -550,14 +759,22 @@ describe("HegicPoolOTM", async () => {
         WETH,
         ethPriceFeed,
         hegicOtmPutETH,
-        pricerETH,
+        pricerETH_OTM_PUT_90,
       } = contracts
       let percent = 80
       let currentPrice = 3200e8
       let period = 86400 * 7
       let strike = round(currentPrice, percent, 100)
-      await pricerETH.connect(deployer).setStrikePercentage(BN.from(percent))
-      await pricerETH.connect(deployer).setStrategy(hegicOtmPutETH.address)
+      await pricerETH_OTM_PUT_90.setImpliedVolRates([
+        80000,
+        80000,
+        80000,
+        80000,
+      ])
+      await pricerETH_OTM_PUT_90
+        .connect(deployer)
+        .setStrikePercentage(BN.from(percent))
+      // await pricerETH_OTM_PUT_90.connect(deployer).setStrategy(hegicOtmPutETH.address)
       let balance_alice_before = await USDC.balanceOf(await alice.getAddress())
       await ethPriceFeed.setPrice(currentPrice)
       await hegicOtmPutETH
@@ -594,14 +811,16 @@ describe("HegicPoolOTM", async () => {
         WETH,
         ethPriceFeed,
         hegicOtmPutETH,
-        pricerETH,
+        pricerETH_OTM_PUT_90,
       } = contracts
       let percent = 90
       let currentPrice = 3200e8
       let period = 86400 * 7
       let strike = round(currentPrice, percent, 100)
-      await pricerETH.connect(deployer).setStrikePercentage(BN.from(percent))
-      await pricerETH.connect(deployer).setStrategy(hegicOtmPutETH.address)
+      await pricerETH_OTM_PUT_90
+        .connect(deployer)
+        .setStrikePercentage(BN.from(percent))
+      // await pricerETH_OTM_PUT_90.connect(deployer).setStrategy(hegicOtmPutETH.address)
       let balance_alice_before = await USDC.balanceOf(await alice.getAddress())
       await ethPriceFeed.setPrice(currentPrice)
       await hegicOtmPutETH
@@ -629,14 +848,16 @@ describe("HegicPoolOTM", async () => {
         WETH,
         ethPriceFeed,
         hegicOtmPutETH,
-        pricerETH,
+        pricerETH_OTM_PUT_90,
       } = contracts
       let percent = 90
       let currentPrice = 3200e8
       let period = 86400 * 7
       let strike = round(currentPrice, percent, 100)
-      await pricerETH.connect(deployer).setStrikePercentage(BN.from(percent))
-      await pricerETH.connect(deployer).setStrategy(hegicOtmPutETH.address)
+      await pricerETH_OTM_PUT_90
+        .connect(deployer)
+        .setStrikePercentage(BN.from(percent))
+      // await pricerETH_OTM_PUT_90.connect(deployer).setStrategy(hegicOtmPutETH.address)
       let balance_alice_before = await USDC.balanceOf(await alice.getAddress())
       await ethPriceFeed.setPrice(currentPrice)
       await hegicOtmPutETH
@@ -664,14 +885,16 @@ describe("HegicPoolOTM", async () => {
         WETH,
         ethPriceFeed,
         hegicOtmPutETH,
-        pricerETH,
+        pricerETH_OTM_PUT_90,
       } = contracts
       let percent = 90
       let currentPrice = 3200e8
       let period = 86400 * 6 + 86399
       let strike = round(currentPrice, percent, 100)
-      await pricerETH.connect(deployer).setStrikePercentage(BN.from(percent))
-      await pricerETH.connect(deployer).setStrategy(hegicOtmPutETH.address)
+      await pricerETH_OTM_PUT_90
+        .connect(deployer)
+        .setStrikePercentage(BN.from(percent))
+      // await pricerETH_OTM_PUT_90.connect(deployer).setStrategy(hegicOtmPutETH.address)
       let balance_alice_before = await USDC.balanceOf(await alice.getAddress())
       await ethPriceFeed.setPrice(currentPrice)
       await expect(
@@ -694,14 +917,16 @@ describe("HegicPoolOTM", async () => {
         WETH,
         ethPriceFeed,
         hegicOtmPutETH,
-        pricerETH,
+        pricerETH_OTM_PUT_90,
       } = contracts
       let percent = 90
       let currentPrice = 3200e8
       let period = 86400 * 45 + 1
       let strike = round(currentPrice, percent, 100)
-      await pricerETH.connect(deployer).setStrikePercentage(BN.from(percent))
-      await pricerETH.connect(deployer).setStrategy(hegicOtmPutETH.address)
+      await pricerETH_OTM_PUT_90
+        .connect(deployer)
+        .setStrikePercentage(BN.from(percent))
+      // await pricerETH_OTM_PUT_90.connect(deployer).setStrategy(hegicOtmPutETH.address)
       let balance_alice_before = await USDC.balanceOf(await alice.getAddress())
       await ethPriceFeed.setPrice(currentPrice)
       await expect(
@@ -724,16 +949,19 @@ describe("HegicPoolOTM", async () => {
         WETH,
         ethPriceFeed,
         hegicOtmPutETH,
-        pricerETH,
+        pricerETH_OTM_PUT_90,
       } = contracts
-      await pricerETH.connect(deployer).setImpliedVolRate0(80000)
-      await pricerETH.connect(deployer).setImpliedVolRate1(800000)
+      await pricerETH_OTM_PUT_90
+        .connect(deployer)
+        .setImpliedVolRates([80000, 800000, 800000, 800000])
       let percent = 90
       let currentPrice = 3200e8
       let period = 86400 * 20
       let strike = round(currentPrice, percent, 100)
-      await pricerETH.connect(deployer).setStrikePercentage(BN.from(percent))
-      await pricerETH.connect(deployer).setStrategy(hegicOtmPutETH.address)
+      await pricerETH_OTM_PUT_90
+        .connect(deployer)
+        .setStrikePercentage(BN.from(percent))
+      // await pricerETH_OTM_PUT_90.connect(deployer).setStrategy(hegicOtmPutETH.address)
       let balance_alice_before = await USDC.balanceOf(await alice.getAddress())
       await ethPriceFeed.setPrice(currentPrice)
       await hegicOtmPutETH
@@ -758,15 +986,20 @@ describe("HegicPoolOTM", async () => {
         WETH,
         ethPriceFeed,
         hegicOtmPutETH,
-        pricerETH,
+        pricerETH_OTM_PUT_90,
         HegicOperationalTreasury,
       } = contracts
       let percent = 90
       let currentPrice = 3200e8
       let period = 86400 * 7
       let strike = round(currentPrice, percent, 100)
-      await pricerETH.connect(deployer).setStrikePercentage(BN.from(percent))
-      await pricerETH.connect(deployer).setStrategy(hegicOtmPutETH.address)
+      await pricerETH_OTM_PUT_90
+        .connect(deployer)
+        .setImpliedVolRates([80000, 80000, 80000, 80000])
+      await pricerETH_OTM_PUT_90
+        .connect(deployer)
+        .setStrikePercentage(BN.from(percent))
+      // await pricerETH_OTM_PUT_90.connect(deployer).setStrategy(hegicOtmPutETH.address)
       await ethPriceFeed.setPrice(currentPrice)
       await hegicOtmPutETH
         .connect(alice)
@@ -789,18 +1022,22 @@ describe("HegicPoolOTM", async () => {
         WETH,
         ethPriceFeed,
         hegicOtmPutETH,
-        pricerETH,
+        pricerETH_OTM_PUT_90,
       } = contracts
       await hegicOtmPutETH.setLimit(
         ethers.utils.parseUnits("1000000", await contracts.USDC.decimals()),
       )
-      await pricerETH.connect(deployer).setImpliedVolRate1(BN.from("800000"))
+      await pricerETH_OTM_PUT_90
+        .connect(deployer)
+        .setImpliedVolRates([92000, 92000, 92000, 92000])
       let percent = 90
       let currentPrice = 3200e8
       let period = 86400 * 30
       let strike = round(currentPrice, percent, 100)
-      await pricerETH.connect(deployer).setStrikePercentage(BN.from(percent))
-      await pricerETH.connect(deployer).setStrategy(hegicOtmPutETH.address)
+      await pricerETH_OTM_PUT_90
+        .connect(deployer)
+        .setStrikePercentage(BN.from(percent))
+      // await pricerETH_OTM_PUT_90.connect(deployer).setStrategy(hegicOtmPutETH.address)
       let balance_alice_before = await USDC.balanceOf(await alice.getAddress())
       await ethPriceFeed.setPrice(currentPrice)
       await hegicOtmPutETH
@@ -813,7 +1050,7 @@ describe("HegicPoolOTM", async () => {
         )
       let balance_alice_after = await USDC.balanceOf(await alice.getAddress())
       let balance_diff = balance_alice_before.sub(balance_alice_after)
-      expect(balance_diff).to.be.above(BN.from(514880e6))
+      expect(balance_diff).to.be.eq(BN.from(59211.2e6))
     })
 
     it("exceeds the limit", async () => {
@@ -824,19 +1061,23 @@ describe("HegicPoolOTM", async () => {
         WETH,
         ethPriceFeed,
         hegicOtmPutETH,
-        pricerETH,
+        pricerETH_OTM_PUT_90,
       } = contracts
       await hegicOtmPutETH.setLimit(
         ethers.utils.parseUnits("1000000", await contracts.USDC.decimals()),
       )
-      await pricerETH.connect(deployer).setImpliedVolRate1(BN.from("800000"))
-      await pricerETH.connect(deployer).setUtilizationRate(0)
+      await pricerETH_OTM_PUT_90
+        .connect(deployer)
+        .setImpliedVolRates([800000, 800000, 800000, 800000])
+      // await pricerETH_OTM_PUT_90.connect(deployer).setUtilizationRate(0)
       let percent = 90
       let currentPrice = 3200e8
       let period = 86400 * 30
       let strike = round(currentPrice, percent, 100)
-      await pricerETH.connect(deployer).setStrikePercentage(BN.from(percent))
-      await pricerETH.connect(deployer).setStrategy(hegicOtmPutETH.address)
+      await pricerETH_OTM_PUT_90
+        .connect(deployer)
+        .setStrikePercentage(BN.from(percent))
+      // await pricerETH_OTM_PUT_90.connect(deployer).setStrategy(hegicOtmPutETH.address)
       await ethPriceFeed.setPrice(currentPrice)
       expect(
         hegicOtmPutETH
@@ -849,6 +1090,47 @@ describe("HegicPoolOTM", async () => {
           ),
       ).to.be.revertedWith("HegicStrategy: The limit is exceeded")
     })
+
+    it("Should return correct amount of available contracts for sell", async () => {
+      const {
+        alice,
+        deployer,
+        USDC,
+        WETH,
+        ethPriceFeed,
+        hegicOtmPutETH,
+        pricerETH_OTM_PUT_90,
+      } = contracts
+      await hegicOtmPutETH.setLimit(
+        ethers.utils.parseUnits("1000000", await contracts.USDC.decimals()),
+      )
+      await pricerETH_OTM_PUT_90
+        .connect(deployer)
+        .setImpliedVolRates([80000, 80000, 80000, 80000])
+      let percent = 110
+      let currentPrice = 3200e8
+      let period = 86400 * 30
+      let strike = round(currentPrice, percent, 100)
+      await pricerETH_OTM_PUT_90
+        .connect(deployer)
+        .setStrikePercentage(BN.from(percent))
+      // await pricerETH_OTM_PUT_90.connect(deployer).setStrategy(hegicOtmPutETH.address)
+      await ethPriceFeed.connect(deployer).setPrice(currentPrice)
+
+      await hegicOtmPutETH
+        .connect(alice)
+        .buy(
+          await alice.getAddress(),
+          period,
+          BN.from(ethers.utils.parseUnits("100", await WETH.decimals())),
+          strike,
+        )
+      expect(
+        await hegicOtmPutETH
+          .calculatePremium(period, 0, strike)
+          .then((x) => x.available),
+      ).to.be.eq("7668800497203231821006")
+    })
   })
 
   describe("BTC CALL POOL", async () => {
@@ -860,14 +1142,24 @@ describe("HegicPoolOTM", async () => {
         WBTC,
         btcPriceFeed,
         hegicOtmCallBTC,
-        pricerBTC,
+        pricerBTC_OTM_CALL_110,
       } = contracts
       let percent = 110
       let currentPrice = 40000e8
       let period = 86400 * 7
       let strike = round(currentPrice, percent, 1000)
-      await pricerBTC.connect(deployer).setStrikePercentage(BN.from(percent))
-      await pricerBTC.connect(deployer).setStrategy(hegicOtmCallBTC.address)
+      await pricerBTC_OTM_CALL_110
+        .connect(deployer)
+        .setImpliedVolRates([
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+        ])
+      await pricerBTC_OTM_CALL_110
+        .connect(deployer)
+        .setStrikePercentage(BN.from(percent))
+      // await pricerBTC_OTM_CALL_110.connect(deployer).setStrategy(hegicOtmCallBTC.address)
       let balance_alice_before = await USDC.balanceOf(await alice.getAddress())
       await btcPriceFeed.setPrice(currentPrice)
       await hegicOtmCallBTC
@@ -904,14 +1196,16 @@ describe("HegicPoolOTM", async () => {
         WBTC,
         btcPriceFeed,
         hegicOtmCallBTC,
-        pricerBTC,
+        pricerBTC_OTM_CALL_110,
       } = contracts
       let percent = 110
       let currentPrice = 32000e8
       let period = 86400 * 7
       let strike = round(currentPrice, percent, 1000)
-      await pricerBTC.connect(deployer).setStrikePercentage(BN.from(percent))
-      await pricerBTC.connect(deployer).setStrategy(hegicOtmCallBTC.address)
+      await pricerBTC_OTM_CALL_110
+        .connect(deployer)
+        .setStrikePercentage(BN.from(percent))
+      // await pricerBTC_OTM_CALL_110.connect(deployer).setStrategy(hegicOtmCallBTC.address)
       let balance_alice_before = await USDC.balanceOf(await alice.getAddress())
       await btcPriceFeed.setPrice(currentPrice)
       await hegicOtmCallBTC
@@ -939,14 +1233,16 @@ describe("HegicPoolOTM", async () => {
         WBTC,
         btcPriceFeed,
         hegicOtmCallBTC,
-        pricerBTC,
+        pricerBTC_OTM_CALL_110,
       } = contracts
       let percent = 110
       let currentPrice = 3200e8
       let period = 86400 * 7
       let strike = round(currentPrice, percent, 1000)
-      await pricerBTC.connect(deployer).setStrikePercentage(BN.from(percent))
-      await pricerBTC.connect(deployer).setStrategy(hegicOtmCallBTC.address)
+      await pricerBTC_OTM_CALL_110
+        .connect(deployer)
+        .setStrikePercentage(BN.from(percent))
+      // await pricerBTC_OTM_CALL_110.connect(deployer).setStrategy(hegicOtmCallBTC.address)
       let balance_alice_before = await USDC.balanceOf(await alice.getAddress())
       await btcPriceFeed.setPrice(currentPrice)
       await hegicOtmCallBTC
@@ -974,14 +1270,16 @@ describe("HegicPoolOTM", async () => {
         WBTC,
         btcPriceFeed,
         hegicOtmCallBTC,
-        pricerBTC,
+        pricerBTC_OTM_CALL_110,
       } = contracts
       let percent = 110
       let currentPrice = 3200e8
       let period = 86400 * 6 + 86399
       let strike = round(currentPrice, percent, 1000)
-      await pricerBTC.connect(deployer).setStrikePercentage(BN.from(percent))
-      await pricerBTC.connect(deployer).setStrategy(hegicOtmCallBTC.address)
+      await pricerBTC_OTM_CALL_110
+        .connect(deployer)
+        .setStrikePercentage(BN.from(percent))
+      // await pricerBTC_OTM_CALL_110.connect(deployer).setStrategy(hegicOtmCallBTC.address)
       let balance_alice_before = await USDC.balanceOf(await alice.getAddress())
       await btcPriceFeed.setPrice(currentPrice)
       await expect(
@@ -1004,14 +1302,16 @@ describe("HegicPoolOTM", async () => {
         WBTC,
         btcPriceFeed,
         hegicOtmCallBTC,
-        pricerBTC,
+        pricerBTC_OTM_CALL_110,
       } = contracts
       let percent = 110
       let currentPrice = 3200e8
       let period = 86400 * 45 + 1
       let strike = round(currentPrice, percent, 1000)
-      await pricerBTC.connect(deployer).setStrikePercentage(BN.from(percent))
-      await pricerBTC.connect(deployer).setStrategy(hegicOtmCallBTC.address)
+      await pricerBTC_OTM_CALL_110
+        .connect(deployer)
+        .setStrikePercentage(BN.from(percent))
+      // await pricerBTC_OTM_CALL_110.connect(deployer).setStrategy(hegicOtmCallBTC.address)
       let balance_alice_before = await USDC.balanceOf(await alice.getAddress())
       await btcPriceFeed.setPrice(currentPrice)
       await expect(
@@ -1034,20 +1334,24 @@ describe("HegicPoolOTM", async () => {
         WBTC,
         btcPriceFeed,
         hegicOtmCallBTC,
-        pricerBTC,
+        pricerBTC_OTM_CALL_110,
       } = contracts
-      await pricerBTC
+      await pricerBTC_OTM_CALL_110
         .connect(deployer)
-        .setImpliedVolRate0(BN.from("8000000000000000"))
-      await pricerBTC
-        .connect(deployer)
-        .setImpliedVolRate1(BN.from("80000000000000000"))
+        .setImpliedVolRates([
+          "8000000000000000",
+          "80000000000000000",
+          "80000000000000000",
+          "80000000000000000",
+        ])
       let percent = 110
       let currentPrice = 3200e8
       let period = 86400 * 20
       let strike = round(currentPrice, percent, 1000)
-      await pricerBTC.connect(deployer).setStrikePercentage(BN.from(percent))
-      await pricerBTC.connect(deployer).setStrategy(hegicOtmCallBTC.address)
+      await pricerBTC_OTM_CALL_110
+        .connect(deployer)
+        .setStrikePercentage(BN.from(percent))
+      // await pricerBTC_OTM_CALL_110.connect(deployer).setStrategy(hegicOtmCallBTC.address)
       let balance_alice_before = await USDC.balanceOf(await alice.getAddress())
       await btcPriceFeed.setPrice(currentPrice)
       await hegicOtmCallBTC
@@ -1072,15 +1376,25 @@ describe("HegicPoolOTM", async () => {
         WBTC,
         btcPriceFeed,
         hegicOtmCallBTC,
-        pricerBTC,
+        pricerBTC_OTM_CALL_110,
         HegicOperationalTreasury,
       } = contracts
       let percent = 110
       let currentPrice = 40000e8
       let period = 86400 * 7
       let strike = round(currentPrice, percent, 1000)
-      await pricerBTC.connect(deployer).setStrikePercentage(BN.from(percent))
-      await pricerBTC.connect(deployer).setStrategy(hegicOtmCallBTC.address)
+      await pricerBTC_OTM_CALL_110
+        .connect(deployer)
+        .setImpliedVolRates([
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+        ])
+      await pricerBTC_OTM_CALL_110
+        .connect(deployer)
+        .setStrikePercentage(BN.from(percent))
+      // await pricerBTC_OTM_CALL_110.connect(deployer).setStrategy(hegicOtmCallBTC.address)
       await btcPriceFeed.setPrice(currentPrice)
       await hegicOtmCallBTC
         .connect(alice)
@@ -1105,20 +1419,29 @@ describe("HegicPoolOTM", async () => {
         WBTC,
         btcPriceFeed,
         hegicOtmCallBTC,
-        pricerBTC,
+        pricerBTC_OTM_CALL_110,
       } = contracts
       await hegicOtmCallBTC.setLimit(
         ethers.utils.parseUnits("1000000", await contracts.USDC.decimals()),
       )
-      await pricerBTC
+
+      await pricerBTC_OTM_CALL_110
         .connect(deployer)
-        .setImpliedVolRate1(BN.from("80000000000000000"))
+        .setImpliedVolRates([
+          "80000000000000000",
+          "80000000000000000",
+          "80000000000000000",
+          "80000000000000000",
+        ])
+
       let percent = 110
       let currentPrice = 3200e8
       let period = 86400 * 30
       let strike = round(currentPrice, percent, 1000)
-      await pricerBTC.connect(deployer).setStrikePercentage(BN.from(percent))
-      await pricerBTC.connect(deployer).setStrategy(hegicOtmCallBTC.address)
+      await pricerBTC_OTM_CALL_110
+        .connect(deployer)
+        .setStrikePercentage(BN.from(percent))
+      // await pricerBTC_OTM_CALL_110.connect(deployer).setStrategy(hegicOtmCallBTC.address)
       let balance_alice_before = await USDC.balanceOf(await alice.getAddress())
       await btcPriceFeed.setPrice(currentPrice)
       await hegicOtmCallBTC
@@ -1131,7 +1454,7 @@ describe("HegicPoolOTM", async () => {
         )
       let balance_alice_after = await USDC.balanceOf(await alice.getAddress())
       let balance_diff = balance_alice_before.sub(balance_alice_after)
-      expect(balance_diff).to.be.above(BN.from(643600e6))
+      expect(balance_diff).to.be.eq(BN.from(643600e6))
     })
 
     it("exceeds the limit", async () => {
@@ -1141,25 +1464,32 @@ describe("HegicPoolOTM", async () => {
         USDC,
         WBTC,
         btcPriceFeed,
-        hegicOtmPutBTC,
-        pricerBTC,
+        hegicOtmCallBTC,
+        pricerBTC_OTM_CALL_110,
       } = contracts
-      await hegicOtmPutBTC.setLimit(
+      await hegicOtmCallBTC.setLimit(
         ethers.utils.parseUnits("1000000", await contracts.USDC.decimals()),
       )
-      await pricerBTC
+      await pricerBTC_OTM_CALL_110
         .connect(deployer)
-        .setImpliedVolRate1(BN.from("80000000000000000"))
-      await pricerBTC.connect(deployer).setUtilizationRate(0)
+        .setImpliedVolRates([
+          "80000000000000000",
+          "80000000000000000",
+          "80000000000000000",
+          "80000000000000000",
+        ])
+      // await pricerBTC_OTM_CALL_110.connect(deployer).setUtilizationRate(0)
       let percent = 110
       let currentPrice = 3200e8
       let period = 86400 * 30
       let strike = round(currentPrice, percent, 1000)
-      await pricerBTC.connect(deployer).setStrikePercentage(BN.from(percent))
-      await pricerBTC.connect(deployer).setStrategy(hegicOtmPutBTC.address)
+      await pricerBTC_OTM_CALL_110
+        .connect(deployer)
+        .setStrikePercentage(BN.from(percent))
+      // await pricerBTC_OTM_CALL_110.connect(deployer).setStrategy(hegicOtmPutBTC.address)
       await btcPriceFeed.setPrice(currentPrice)
       expect(
-        hegicOtmPutBTC
+        hegicOtmCallBTC
           .connect(alice)
           .buy(
             await alice.getAddress(),
@@ -1180,14 +1510,24 @@ describe("HegicPoolOTM", async () => {
         WBTC,
         btcPriceFeed,
         hegicOtmPutBTC,
-        pricerBTC,
+        pricerBTC_OTM_PUT_90,
       } = contracts
       let percent = 90
       let currentPrice = 40125e8
       let period = 86400 * 7
       let strike = round(currentPrice, percent, 1000)
-      await pricerBTC.connect(deployer).setStrikePercentage(BN.from(percent))
-      await pricerBTC.connect(deployer).setStrategy(hegicOtmPutBTC.address)
+      await pricerBTC_OTM_PUT_90
+        .connect(deployer)
+        .setImpliedVolRates([
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+          "8000000000000000",
+        ])
+      await pricerBTC_OTM_PUT_90
+        .connect(deployer)
+        .setStrikePercentage(BN.from(percent))
+      // await pricerBTC_OTM_PUT_90.connect(deployer).setStrategy(hegicOtmPutBTC.address)
       let balance_alice_before = await USDC.balanceOf(await alice.getAddress())
       await btcPriceFeed.setPrice(currentPrice)
       await hegicOtmPutBTC
@@ -1224,14 +1564,16 @@ describe("HegicPoolOTM", async () => {
         WBTC,
         btcPriceFeed,
         hegicOtmPutBTC,
-        pricerBTC,
+        pricerBTC_OTM_PUT_90,
       } = contracts
       let percent = 90
       let currentPrice = 32155e8
       let period = 86400 * 7
       let strike = round(currentPrice, percent, 1000)
-      await pricerBTC.connect(deployer).setStrikePercentage(BN.from(percent))
-      await pricerBTC.connect(deployer).setStrategy(hegicOtmPutBTC.address)
+      await pricerBTC_OTM_PUT_90
+        .connect(deployer)
+        .setStrikePercentage(BN.from(percent))
+      // await pricerBTC_OTM_PUT_90.connect(deployer).setStrategy(hegicOtmPutBTC.address)
       let balance_alice_before = await USDC.balanceOf(await alice.getAddress())
       await btcPriceFeed.setPrice(currentPrice)
       await hegicOtmPutBTC
@@ -1259,14 +1601,16 @@ describe("HegicPoolOTM", async () => {
         WBTC,
         btcPriceFeed,
         hegicOtmPutBTC,
-        pricerBTC,
+        pricerBTC_OTM_PUT_90,
       } = contracts
       let percent = 90
       let currentPrice = 3200e8
       let period = 86400 * 7
       let strike = round(currentPrice, percent, 1000)
-      await pricerBTC.connect(deployer).setStrikePercentage(BN.from(percent))
-      await pricerBTC.connect(deployer).setStrategy(hegicOtmPutBTC.address)
+      await pricerBTC_OTM_PUT_90
+        .connect(deployer)
+        .setStrikePercentage(BN.from(percent))
+      // await pricerBTC_OTM_PUT_90.connect(deployer).setStrategy(hegicOtmPutBTC.address)
       let balance_alice_before = await USDC.balanceOf(await alice.getAddress())
       await btcPriceFeed.setPrice(currentPrice)
       await hegicOtmPutBTC
@@ -1294,14 +1638,16 @@ describe("HegicPoolOTM", async () => {
         WBTC,
         btcPriceFeed,
         hegicOtmPutBTC,
-        pricerBTC,
+        pricerBTC_OTM_PUT_90,
       } = contracts
       let percent = 90
       let currentPrice = 3200e8
       let period = 86400 * 6 + 86399
       let strike = round(currentPrice, percent, 1000)
-      await pricerBTC.connect(deployer).setStrikePercentage(BN.from(percent))
-      await pricerBTC.connect(deployer).setStrategy(hegicOtmPutBTC.address)
+      await pricerBTC_OTM_PUT_90
+        .connect(deployer)
+        .setStrikePercentage(BN.from(percent))
+      // await pricerBTC_OTM_PUT_90.connect(deployer).setStrategy(hegicOtmPutBTC.address)
       let balance_alice_before = await USDC.balanceOf(await alice.getAddress())
       await btcPriceFeed.setPrice(currentPrice)
       await expect(
@@ -1324,14 +1670,16 @@ describe("HegicPoolOTM", async () => {
         WBTC,
         btcPriceFeed,
         hegicOtmPutBTC,
-        pricerBTC,
+        pricerBTC_OTM_PUT_90,
       } = contracts
       let percent = 90
       let currentPrice = 3200e8
       let period = 86400 * 45 + 1
       let strike = round(currentPrice, percent, 1000)
-      await pricerBTC.connect(deployer).setStrikePercentage(BN.from(percent))
-      await pricerBTC.connect(deployer).setStrategy(hegicOtmPutBTC.address)
+      await pricerBTC_OTM_PUT_90
+        .connect(deployer)
+        .setStrikePercentage(BN.from(percent))
+      // await pricerBTC_OTM_PUT_90.connect(deployer).setStrategy(hegicOtmPutBTC.address)
       let balance_alice_before = await USDC.balanceOf(await alice.getAddress())
       await btcPriceFeed.setPrice(currentPrice)
       await expect(
@@ -1354,20 +1702,22 @@ describe("HegicPoolOTM", async () => {
         WBTC,
         btcPriceFeed,
         hegicOtmPutBTC,
-        pricerBTC,
+        pricerBTC_OTM_PUT_90,
       } = contracts
-      await pricerBTC
-        .connect(deployer)
-        .setImpliedVolRate0(BN.from("8000000000000000"))
-      await pricerBTC
-        .connect(deployer)
-        .setImpliedVolRate1(BN.from("80000000000000000"))
+      await pricerBTC_OTM_PUT_90.setImpliedVolRates([
+        "8000000000000000",
+        "80000000000000000",
+        "80000000000000000",
+        "80000000000000000",
+      ])
       let percent = 90
       let currentPrice = 3200e8
       let period = 86400 * 20
       let strike = round(currentPrice, percent, 1000)
-      await pricerBTC.connect(deployer).setStrikePercentage(BN.from(percent))
-      await pricerBTC.connect(deployer).setStrategy(hegicOtmPutBTC.address)
+      await pricerBTC_OTM_PUT_90
+        .connect(deployer)
+        .setStrikePercentage(BN.from(percent))
+      // await pricerBTC_OTM_PUT_90.connect(deployer).setStrategy(hegicOtmPutBTC.address)
       let balance_alice_before = await USDC.balanceOf(await alice.getAddress())
       await btcPriceFeed.setPrice(currentPrice)
       await hegicOtmPutBTC
@@ -1392,7 +1742,7 @@ describe("HegicPoolOTM", async () => {
         WBTC,
         btcPriceFeed,
         hegicOtmPutBTC,
-        pricerBTC,
+        pricerBTC_OTM_PUT_90,
         HegicOperationalTreasury,
       } = contracts
       let percent = 90
@@ -1402,8 +1752,18 @@ describe("HegicPoolOTM", async () => {
         Math.round(
           Number((((currentPrice / 1000) * percent) / 100e8).toFixed()),
         ) * 1000e8
-      await pricerBTC.connect(deployer).setStrikePercentage(BN.from(percent))
-      await pricerBTC.connect(deployer).setStrategy(hegicOtmPutBTC.address)
+      await pricerBTC_OTM_PUT_90
+        .connect(deployer)
+        .setImpliedVolRates([
+          "8000000000000000",
+          "80000000000000000",
+          "80000000000000000",
+          "80000000000000000",
+        ])
+      await pricerBTC_OTM_PUT_90
+        .connect(deployer)
+        .setStrikePercentage(BN.from(percent))
+      // await pricerBTC_OTM_PUT_90.connect(deployer).setStrategy(hegicOtmPutBTC.address)
       await btcPriceFeed.setPrice(currentPrice)
       await hegicOtmPutBTC
         .connect(alice)
@@ -1426,22 +1786,29 @@ describe("HegicPoolOTM", async () => {
         WBTC,
         btcPriceFeed,
         hegicOtmPutBTC,
-        pricerBTC,
+        pricerBTC_OTM_PUT_90,
         HegicOperationalTreasury,
       } = contracts
       await hegicOtmPutBTC.setLimit(
         ethers.utils.parseUnits("100000", await contracts.USDC.decimals()),
       )
-      await pricerBTC
+      await pricerBTC_OTM_PUT_90
         .connect(deployer)
-        .setImpliedVolRate1(BN.from("80000000000000000"))
-      await pricerBTC.connect(deployer).setUtilizationRate(0)
+        .setImpliedVolRates([
+          "80000000000000000",
+          "80000000000000000",
+          "80000000000000000",
+          "80000000000000000",
+        ])
+      // await pricerBTC_OTM_PUT_90.connect(deployer).setUtilizationRate(0)
       let percent = 90
       let currentPrice = 32000e8
       let period = 86400 * 30
       let strike = round(currentPrice, percent, 1000)
-      await pricerBTC.connect(deployer).setStrikePercentage(BN.from(percent))
-      await pricerBTC.connect(deployer).setStrategy(hegicOtmPutBTC.address)
+      await pricerBTC_OTM_PUT_90
+        .connect(deployer)
+        .setStrikePercentage(BN.from(percent))
+      // await pricerBTC_OTM_PUT_90.connect(deployer).setStrategy(hegicOtmPutBTC.address)
       await btcPriceFeed.setPrice(currentPrice)
       await hegicOtmPutBTC.setK(200)
       await hegicOtmPutBTC
@@ -1465,20 +1832,27 @@ describe("HegicPoolOTM", async () => {
         WBTC,
         btcPriceFeed,
         hegicOtmPutBTC,
-        pricerBTC,
+        pricerBTC_OTM_PUT_90,
       } = contracts
       await hegicOtmPutBTC.setLimit(
         ethers.utils.parseUnits("1000000", await contracts.USDC.decimals()),
       )
-      await pricerBTC
+      await pricerBTC_OTM_PUT_90
         .connect(deployer)
-        .setImpliedVolRate1(BN.from("80000000000000000"))
+        .setImpliedVolRates([
+          "80000000000000000",
+          "80000000000000000",
+          "80000000000000000",
+          "80000000000000000",
+        ])
       let percent = 90
       let currentPrice = 3200e8
       let period = 86400 * 30
       let strike = round(currentPrice, percent, 1000)
-      await pricerBTC.connect(deployer).setStrikePercentage(BN.from(percent))
-      await pricerBTC.connect(deployer).setStrategy(hegicOtmPutBTC.address)
+      await pricerBTC_OTM_PUT_90
+        .connect(deployer)
+        .setStrikePercentage(BN.from(percent))
+      // await pricerBTC_OTM_PUT_90.connect(deployer).setStrategy(hegicOtmPutBTC.address)
       let balance_alice_before = await USDC.balanceOf(await alice.getAddress())
       await btcPriceFeed.setPrice(currentPrice)
       await hegicOtmPutBTC
@@ -1491,7 +1865,7 @@ describe("HegicPoolOTM", async () => {
         )
       let balance_alice_after = await USDC.balanceOf(await alice.getAddress())
       let balance_diff = balance_alice_before.sub(balance_alice_after)
-      expect(balance_diff.toString()).to.be.above(BN.from(643600e6))
+      expect(balance_diff.toString()).to.be.eq(BN.from(643600e6))
     })
 
     it("exceeds the limit", async () => {
@@ -1501,25 +1875,32 @@ describe("HegicPoolOTM", async () => {
         USDC,
         WBTC,
         btcPriceFeed,
-        hegicOtmCallBTC,
-        pricerBTC,
+        hegicOtmPutBTC,
+        pricerBTC_OTM_PUT_90,
       } = contracts
-      await hegicOtmCallBTC.setLimit(
+      await hegicOtmPutBTC.setLimit(
         ethers.utils.parseUnits("1000000", await contracts.USDC.decimals()),
       )
-      await pricerBTC
+      await pricerBTC_OTM_PUT_90
         .connect(deployer)
-        .setImpliedVolRate1(BN.from("80000000000000000"))
-      await pricerBTC.connect(deployer).setUtilizationRate(0)
+        .setImpliedVolRates([
+          "80000000000000000",
+          "80000000000000000",
+          "80000000000000000",
+          "80000000000000000",
+        ])
+      // await pricerBTC_OTM_PUT_90.connect(deployer).setUtilizationRate(0)
       let percent = 90
       let currentPrice = 3200e8
       let period = 86400 * 30
       let strike = round(currentPrice, percent, 1000)
-      await pricerBTC.connect(deployer).setStrikePercentage(BN.from(percent))
-      await pricerBTC.connect(deployer).setStrategy(hegicOtmCallBTC.address)
+      await pricerBTC_OTM_PUT_90
+        .connect(deployer)
+        .setStrikePercentage(BN.from(percent))
+      // await pricerBTC_OTM_PUT_90.connect(deployer).setStrategy(hegicOtmCallBTC.address)
       await btcPriceFeed.setPrice(currentPrice)
       expect(
-        hegicOtmCallBTC
+        hegicOtmPutBTC
           .connect(alice)
           .buy(
             await alice.getAddress(),

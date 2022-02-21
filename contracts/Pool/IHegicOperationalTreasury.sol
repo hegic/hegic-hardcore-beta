@@ -58,7 +58,11 @@ interface IHegicOperationalTreasury {
         view
         returns (uint256 lockedAmount);
 
+    function getStakeAndCoverBalance() external view returns (uint256 balance);
+
     function totalBalance() external view returns (uint256 totalBalance);
+
+    function lockedPremium() external view returns (uint256 lockedPremium);
 
     function benchmark() external view returns (uint256 benchmark);
 

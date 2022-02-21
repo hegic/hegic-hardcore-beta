@@ -29,13 +29,14 @@ import "../utils/Math.sol";
  * that are adjusted through the `ImpliedVolRate` parameter.
  **/
 
-contract PriceCalculator is IPriceCalculator, IPremiumCalculator, Ownable {
+contract PriceCalculator is IPriceCalculator, Ownable {
     using HegicMath for uint256;
 
     uint256 public impliedVolRate;
     uint256 internal immutable priceDecimals;
     uint256 internal constant IVL_DECIMALS = 1e18;
     uint256 public settlementFeeShare = 20;
+    uint256 public minPeriod = 7 days;
     uint256 public maxPeriod = 30 days;
 
     AggregatorV3Interface public priceProvider;
@@ -53,6 +54,7 @@ contract PriceCalculator is IPriceCalculator, IPremiumCalculator, Ownable {
      **/
     function setImpliedVolRate(uint256 value) external onlyOwner {
         impliedVolRate = value;
+        emit SetImpliedVolRate(value);
     }
 
     /**
@@ -63,10 +65,14 @@ contract PriceCalculator is IPriceCalculator, IPremiumCalculator, Ownable {
     function setSettlementFeeShare(uint256 value) external onlyOwner {
         require(value <= 100, "The value is too large");
         settlementFeeShare = value;
+        emit SetSettlementFeeShare(value);
     }
 
-    function setMaxPeriod(uint256 value) external onlyOwner {
-        maxPeriod = value;
+    function setPeriodLimits(uint256 min, uint256 max) external onlyOwner {
+        require(min >= 1 days && max <= 90 days);
+        maxPeriod = max;
+        minPeriod = min;
+        emit SetPeriodLimits(min, max);
     }
 
     /**
@@ -100,20 +106,19 @@ contract PriceCalculator is IPriceCalculator, IPremiumCalculator, Ownable {
         uint256 period,
         uint256 amount,
         uint256 strike
-    ) public view override returns (uint256 premium) {
-        require(period >= 1 days, "HegicStrategy: The period is too short");
-        require(period <= 30 days, "HegicStrategy: The period is too long");
-        return _calculatePeriodFee(amount, period);
-    }
-
-    function calculatePremiumS(
-        uint256 period,
-        uint256 amount,
-        uint256 strike
     ) public view returns (uint256 premium) {
-        require(period >= 1 days, "HegicStrategy: The period is too short");
-        require(period <= 30 days, "HegicStrategy: The period is too long");
-        return _calculatePeriodFeeS(amount, period);
+        uint256 currentPrice = _currentPrice();
+        if (strike == 0) strike = currentPrice;
+        require(
+            period >= minPeriod,
+            "PriceCalculator: The period is too short"
+        );
+        require(period <= maxPeriod, "PriceCalculator: The period is too long");
+        require(
+            strike == currentPrice,
+            "PriceCalculator: The strike is invalid"
+        );
+        return _calculatePeriodFee(amount, period);
     }
 
     /**
@@ -128,22 +133,7 @@ contract PriceCalculator is IPriceCalculator, IPremiumCalculator, Ownable {
         virtual
         returns (uint256 fee)
     {
-        return
-            (amount * impliedVolRate * period.sqrt()) /
-            // priceDecimals /
-            IVL_DECIMALS;
-    }
-
-    function _calculatePeriodFeeS(uint256 amount, uint256 period)
-        internal
-        view
-        virtual
-        returns (uint256 fee)
-    {
-        return
-            (amount * impliedVolRate * period.sqrt()) /
-            // priceDecimals /
-            IVL_DECIMALS;
+        return (amount * impliedVolRate * period.sqrt()) / IVL_DECIMALS;
     }
 
     /**

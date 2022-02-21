@@ -1,11 +1,11 @@
-import { HardhatRuntimeEnvironment } from "hardhat/types"
+import {HardhatRuntimeEnvironment} from "hardhat/types"
 
 import PriceProvider from "../../artifacts/@chainlink/contracts/src/v0.7/interfaces/AggregatorV3Interface.sol/AggregatorV3Interface.json"
 
 async function deployment(hre: HardhatRuntimeEnvironment): Promise<void> {
-  const { deployments, getNamedAccounts, network } = hre
-  const { deploy, save, getArtifact } = deployments
-  const { deployer } = await getNamedAccounts()
+  const {deployments, getNamedAccounts, network} = hre
+  const {deploy, save, getArtifact} = deployments
+  const {deployer} = await getNamedAccounts()
 
   if (network.name == "mainnet") {
     const IERC20ABI = await getArtifact("ERC20").then((x) => x.abi)
@@ -47,7 +47,7 @@ async function deployment(hre: HardhatRuntimeEnvironment): Promise<void> {
       contract: "ERC20Mock",
       from: deployer,
       log: true,
-      args: ["HEGIC", "H", 18],
+      args: ["HEGIC (Mock)", "HEGIC", 18],
     })
 
     await deploy("USDC", {

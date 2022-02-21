@@ -99,6 +99,61 @@ describe("HegicStakeAndCover", async () => {
 
       beforeEach(async () => {
         const {alice, HegicStakeAndCover, USDC, HEGIC} = contracts
+        async function printState(text?: string) {
+          console.log(" ------------------------ " + text)
+          const totalBalance = await HegicStakeAndCover.totalBalance()
+          console.log(
+            "HegicStakeAndCover.totalBalance",
+            ethers.utils.formatUnits(totalBalance, 18),
+            "H",
+          )
+          console.log(
+            "HegicStakeAndCover.availableBalance",
+            ethers.utils.formatUnits(
+              await HegicStakeAndCover.availableBalance(),
+              6,
+            ),
+            "$",
+          )
+          const aliceShare = await HegicStakeAndCover.shareOf(
+            await alice.getAddress(),
+          )
+          const aliceBalance = await HegicStakeAndCover.balanceOf(
+            await alice.getAddress(),
+          )
+          const startBalance = await HegicStakeAndCover.startBalance(
+            await alice.getAddress(),
+          )
+
+          console.log(
+            "HegicStakeAndCover.balanceOf(alice)",
+            ethers.utils.formatUnits(aliceBalance, 18),
+            "H",
+          )
+          console.log(
+            "HegicStakeAndCover.shareOf(alice)",
+            ethers.utils.formatUnits(aliceShare, 6),
+            "$",
+          )
+          console.log(
+            "HegicStakeAndCover.startBalance(alice)",
+            ethers.utils.formatUnits(startBalance, 6),
+            "$",
+          )
+          console.log(
+            "HegicStakeAndCover aliceShare%",
+            aliceBalance.mul(10000000).div(totalBalance).toNumber() / 100000,
+          )
+          console.log(
+            "HegicStakeAndCover.profitOf(alice)",
+            ethers.utils.formatUnits(
+              await HegicStakeAndCover.profitOf(await alice.getAddress()),
+              6,
+            ),
+            "$",
+          )
+        }
+        // await printState("start")
         USDCBalanceBeforeProvide = await USDC.balanceOf(
           HegicStakeAndCover.address,
         )
@@ -106,6 +161,7 @@ describe("HegicStakeAndCover", async () => {
         await HegicStakeAndCover.connect(alice).provide(
           ethers.utils.parseUnits("1000000", await HEGIC.decimals()),
         )
+        // await printState("provide")
         USDCBalanceAfterProvide = await USDC.balanceOf(
           HegicStakeAndCover.address,
         )
@@ -114,12 +170,14 @@ describe("HegicStakeAndCover", async () => {
           contracts.HegicStakeAndCover.address,
           ethers.utils.parseUnits("100000", await USDC.decimals()),
         )
+        // await printState("profit")
         USDCBalanceBeforeClaim = await USDC.balanceOf(await alice.getAddress())
         HEGICBalanceBeforeClaim = await HegicStakeAndCover.balanceOf(
           await alice.getAddress(),
         )
-        let before = await USDC.balanceOf(await alice.getAddress())
+
         await HegicStakeAndCover.connect(alice).claimProfit()
+
         USDCBalanceAfterClaim = await USDC.balanceOf(await alice.getAddress())
         HEGICBalanceAfterClaim = await HegicStakeAndCover.balanceOf(
           await alice.getAddress(),
@@ -242,7 +300,7 @@ describe("HegicStakeAndCover", async () => {
           HEGIC,
           USDC,
         } = contracts
-        await HegicStakeAndCover.connect(alice).trasferShare(
+        await HegicStakeAndCover.connect(alice).transferShare(
           await piter.getAddress(),
           BN.from("495098039220147000000000"),
         )
@@ -268,7 +326,7 @@ describe("HegicStakeAndCover", async () => {
           HEGIC,
           USDC,
         } = contracts
-        await HegicStakeAndCover.connect(alice).trasferShare(
+        await HegicStakeAndCover.connect(alice).transferShare(
           await piter.getAddress(),
           BN.from("495098039220147000000000"),
         )

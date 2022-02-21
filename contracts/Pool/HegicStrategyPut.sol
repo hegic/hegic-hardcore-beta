@@ -26,14 +26,13 @@ contract HegicStrategyPut is HegicStrategy {
     // uint256 private immutable spotDecimals; // 1e18
     uint256 private constant TOKEN_DECIMALS = 1e6; // 1e6
 
-     constructor(
-         IHegicOperationalTreasury _pool,
-         AggregatorV3Interface _priceProvider,
-         IPremiumCalculator _pricer,
-         uint8 _spotDecimals,
-         uint256 limit
-     ) HegicStrategy(_pool, _priceProvider, _pricer, 10, limit, _spotDecimals) {
-     }
+    constructor(
+        IHegicOperationalTreasury _pool,
+        AggregatorV3Interface _priceProvider,
+        IPremiumCalculator _pricer,
+        uint8 _spotDecimals,
+        uint256 limit
+    ) HegicStrategy(_pool, _priceProvider, _pricer, 10, limit, _spotDecimals) {}
 
     function _profitOf(uint256 optionID)
         internal
@@ -50,5 +49,4 @@ contract HegicStrategyPut is HegicStrategy {
             spotDecimals /
             priceDecimals;
     }
-
 }

@@ -52,7 +52,16 @@ describe("HegicPoolStrap", async () => {
 
   beforeEach(async () => {
     contracts = await fixture()
-    const {alice, hegicStrapETH, hegicStrapBTC} = contracts
+    const {
+      alice,
+      hegicStrapETH,
+      hegicStrapBTC,
+      pricerETH,
+      pricerBTC,
+    } = contracts
+
+    await pricerETH.setPeriodLimits(1 * 24 * 3600, 30 * 24 * 3600)
+    await pricerBTC.setPeriodLimits(1 * 24 * 3600, 30 * 24 * 3600)
 
     await contracts.USDC.mintTo(
       contracts.HegicOperationalTreasury.address,
@@ -97,7 +106,6 @@ describe("HegicPoolStrap", async () => {
       await hegicStrapETH.setLimit(
         ethers.utils.parseUnits("1000000", await contracts.USDC.decimals()),
       )
-      await pricerETH.connect(deployer).setStrategy(hegicStrapETH.address)
       let balance_alice_before = await USDC.balanceOf(await alice.getAddress())
       let strike_price = 5000e8
       let new_price = 7000e8
@@ -137,7 +145,6 @@ describe("HegicPoolStrap", async () => {
       await hegicStrapETH.setLimit(
         ethers.utils.parseUnits("1000000", await contracts.USDC.decimals()),
       )
-      await pricerETH.connect(deployer).setStrategy(hegicStrapETH.address)
       let balance_alice_before = await USDC.balanceOf(await alice.getAddress())
       let strike_price = 5000e8
       let new_price = 3000e8
@@ -177,7 +184,6 @@ describe("HegicPoolStrap", async () => {
       await hegicStrapETH.setLimit(
         ethers.utils.parseUnits("1000000", await contracts.USDC.decimals()),
       )
-      await pricerETH.connect(deployer).setStrategy(hegicStrapETH.address)
       let balance_alice_before = await USDC.balanceOf(await alice.getAddress())
       let strike_price = 9000e8
       let new_price = 9000e8
@@ -210,7 +216,6 @@ describe("HegicPoolStrap", async () => {
       await hegicStrapETH.setLimit(
         ethers.utils.parseUnits("1000000", await contracts.USDC.decimals()),
       )
-      await pricerETH.connect(deployer).setStrategy(hegicStrapETH.address)
       let balance_alice_before = await USDC.balanceOf(await alice.getAddress())
       let strike_price = 3000e8
       let new_price = 8000e8
@@ -242,7 +247,6 @@ describe("HegicPoolStrap", async () => {
       await hegicStrapETH.setLimit(
         ethers.utils.parseUnits("1000000", await contracts.USDC.decimals()),
       )
-      await pricerETH.connect(deployer).setStrategy(hegicStrapETH.address)
       let strike_price = 3000e8
       let new_price = 8000e8
       await ethPriceFeed.setPrice(strike_price)
@@ -255,7 +259,7 @@ describe("HegicPoolStrap", async () => {
             BN.from(ethers.utils.parseUnits("0.3535", await WETH.decimals())),
             0,
           ),
-      ).to.be.revertedWith("HegicStrategy: The period is too short")
+      ).to.be.revertedWith("PriceCalculator: The period is too short")
     })
 
     it("more then max period", async () => {
@@ -270,7 +274,6 @@ describe("HegicPoolStrap", async () => {
       await hegicStrapETH.setLimit(
         ethers.utils.parseUnits("1000000", await contracts.USDC.decimals()),
       )
-      await pricerETH.connect(deployer).setStrategy(hegicStrapETH.address)
       let strike_price = 3000e8
       let new_price = 8000e8
       await ethPriceFeed.setPrice(strike_price)
@@ -283,7 +286,7 @@ describe("HegicPoolStrap", async () => {
             BN.from(ethers.utils.parseUnits("0.3535", await WETH.decimals())),
             0,
           ),
-      ).to.be.revertedWith("HegicStrategy: The period is too long")
+      ).to.be.revertedWith("PriceCalculator: The period is too long")
     })
 
     it("locked amount", async () => {
@@ -300,7 +303,6 @@ describe("HegicPoolStrap", async () => {
       await hegicStrapETH.setLimit(
         ethers.utils.parseUnits("1000000", await contracts.USDC.decimals()),
       )
-      await pricerETH.connect(deployer).setStrategy(hegicStrapETH.address)
       await pricerETH.connect(deployer).setImpliedVolRate(BN.from("800000"))
       let strike_price = 5000e8
       let new_price = 7000e8
@@ -332,7 +334,6 @@ describe("HegicPoolStrap", async () => {
       await hegicStrapETH.setLimit(
         ethers.utils.parseUnits("1000000", await contracts.USDC.decimals()),
       )
-      await pricerETH.connect(deployer).setStrategy(hegicStrapETH.address)
       await pricerETH.connect(deployer).setImpliedVolRate(BN.from("800000"))
       let strike_price = 5000e8
       let new_price = 7000e8
@@ -348,7 +349,7 @@ describe("HegicPoolStrap", async () => {
         )
       let balance_alice_after = await USDC.balanceOf(await alice.getAddress())
       let balance_diff = balance_alice_before.sub(balance_alice_after)
-      expect(balance_diff).to.be.above(BN.from(514880e6))
+      expect(balance_diff).to.be.eq(BN.from(514880e6))
     })
 
     it("exceeds the limit", async () => {
@@ -365,9 +366,7 @@ describe("HegicPoolStrap", async () => {
       await hegicStrapETH.setLimit(
         ethers.utils.parseUnits("1000000", await contracts.USDC.decimals()),
       )
-      await pricerETH.connect(deployer).setStrategy(hegicStrapETH.address)
       await pricerETH.connect(deployer).setImpliedVolRate(BN.from("800000"))
-      await pricerETH.connect(deployer).setUtilizationRate(0)
       let strike_price = 5000e8
       let new_price = 7000e8
       await ethPriceFeed.setPrice(strike_price)
@@ -398,7 +397,6 @@ describe("HegicPoolStrap", async () => {
       await hegicStrapBTC.setLimit(
         ethers.utils.parseUnits("1000000", await contracts.USDC.decimals()),
       )
-      await pricerBTC.connect(deployer).setStrategy(hegicStrapBTC.address)
       let balance_alice_before = await USDC.balanceOf(await alice.getAddress())
       let strike_price = 40000e8
       let new_price = 50000e8
@@ -438,7 +436,6 @@ describe("HegicPoolStrap", async () => {
       await hegicStrapBTC.setLimit(
         ethers.utils.parseUnits("1000000", await contracts.USDC.decimals()),
       )
-      await pricerBTC.connect(deployer).setStrategy(hegicStrapBTC.address)
       let balance_alice_before = await USDC.balanceOf(await alice.getAddress())
       let strike_price = 50000e8
       let new_price = 40000e8
@@ -478,7 +475,6 @@ describe("HegicPoolStrap", async () => {
       await hegicStrapBTC.setLimit(
         ethers.utils.parseUnits("1000000", await contracts.USDC.decimals()),
       )
-      await pricerBTC.connect(deployer).setStrategy(hegicStrapBTC.address)
       let balance_alice_before = await USDC.balanceOf(await alice.getAddress())
       let strike_price = 9000e8
       let new_price = 9000e8
@@ -511,7 +507,6 @@ describe("HegicPoolStrap", async () => {
       await hegicStrapBTC.setLimit(
         ethers.utils.parseUnits("1000000", await contracts.USDC.decimals()),
       )
-      await pricerBTC.connect(deployer).setStrategy(hegicStrapBTC.address)
       let balance_alice_before = await USDC.balanceOf(await alice.getAddress())
       let strike_price = 3000e8
       let new_price = 8000e8
@@ -543,7 +538,6 @@ describe("HegicPoolStrap", async () => {
       await hegicStrapBTC.setLimit(
         ethers.utils.parseUnits("1000000", await contracts.USDC.decimals()),
       )
-      await pricerBTC.connect(deployer).setStrategy(hegicStrapBTC.address)
       let strike_price = 3000e8
       let new_price = 8000e8
       await btcPriceFeed.setPrice(strike_price)
@@ -556,7 +550,7 @@ describe("HegicPoolStrap", async () => {
             BN.from(ethers.utils.parseUnits("1", await WBTC.decimals())),
             0,
           ),
-      ).to.be.revertedWith("HegicStrategy: The period is too short")
+      ).to.be.revertedWith("PriceCalculator: The period is too short")
     })
 
     it("more then max period", async () => {
@@ -571,7 +565,6 @@ describe("HegicPoolStrap", async () => {
       await hegicStrapBTC.setLimit(
         ethers.utils.parseUnits("1000000", await contracts.USDC.decimals()),
       )
-      await pricerBTC.connect(deployer).setStrategy(hegicStrapBTC.address)
       let strike_price = 3000e8
       let new_price = 8000e8
       await btcPriceFeed.setPrice(strike_price)
@@ -584,7 +577,7 @@ describe("HegicPoolStrap", async () => {
             BN.from(ethers.utils.parseUnits("1", await WBTC.decimals())),
             0,
           ),
-      ).to.be.revertedWith("HegicStrategy: The period is too long")
+      ).to.be.revertedWith("PriceCalculator: The period is too long")
     })
 
     it("locked amount", async () => {
@@ -601,7 +594,6 @@ describe("HegicPoolStrap", async () => {
       await hegicStrapBTC.setLimit(
         ethers.utils.parseUnits("1000000", await contracts.USDC.decimals()),
       )
-      await pricerBTC.connect(deployer).setStrategy(hegicStrapBTC.address)
       await pricerBTC
         .connect(deployer)
         .setImpliedVolRate(BN.from("80000000000000000"))
@@ -635,7 +627,6 @@ describe("HegicPoolStrap", async () => {
       await hegicStrapBTC.setLimit(
         ethers.utils.parseUnits("1000000", await contracts.USDC.decimals()),
       )
-      await pricerBTC.connect(deployer).setStrategy(hegicStrapBTC.address)
       await pricerBTC
         .connect(deployer)
         .setImpliedVolRate(BN.from("80000000000000000"))
@@ -670,11 +661,9 @@ describe("HegicPoolStrap", async () => {
       await hegicStrapBTC.setLimit(
         ethers.utils.parseUnits("1000000", await contracts.USDC.decimals()),
       )
-      await pricerBTC.connect(deployer).setStrategy(hegicStrapBTC.address)
       await pricerBTC
         .connect(deployer)
         .setImpliedVolRate(BN.from("80000000000000000"))
-      await pricerBTC.connect(deployer).setUtilizationRate(0)
       let strike_price = 5000e8
       let new_price = 7000e8
       await btcPriceFeed.setPrice(strike_price)

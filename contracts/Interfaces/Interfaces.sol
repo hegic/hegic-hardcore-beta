@@ -39,6 +39,10 @@ import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router01.sol";
  *   through balancing the `ImpliedVolRate` parameter.
  **/
 interface IPriceCalculator {
+    event SetImpliedVolRate(uint256 value);
+    event SetSettlementFeeShare(uint256 value);
+    event SetPeriodLimits(uint256 min, uint256 max);
+
     /**
      * @param period The option period
      * @param amount The option size
@@ -52,6 +56,12 @@ interface IPriceCalculator {
 }
 
 interface IPremiumCalculator {
+    event SetBorders(uint256[3] values);
+    event SetImpliedVolRates(uint256[4] values);
+    event SetStrikePercentage(uint256 value);
+    event SetSettlementFeeShare(uint256 value);
+    event SetPeriodLimits(uint256 min, uint256 max);
+
     /**
      * @param period The option period
      * @param amount The option size
@@ -186,14 +196,6 @@ interface IHegicPool is IERC721, IPriceCalculator {
         uint256 amount,
         uint256 strike
     ) external returns (uint256 id);
-
-    /**
-     * @param trancheID The liquidity tranche ID
-     * @return amount The amount to be received after the withdrawal
-     **/
-    function withdrawWithoutHedge(uint256 trancheID)
-        external
-        returns (uint256 amount);
 
     /**
      * @return amount The total liquidity provided into the pool
