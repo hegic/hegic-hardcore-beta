@@ -1,4 +1,4 @@
-# Hegic Protocol v8888 (Release Date: August 10, 2021)
+# Hegic HardCore Beta (Release Date: 2/22/22)
 
 [![Build
 Status](https://github.com/hegic/contracts/actions/workflows/ci.yaml/badge.svg)](https://github.com/hegic/contracts/actions/workflows/ci.yaml)
@@ -11,9 +11,8 @@ Follow](https://img.shields.io/twitter/follow/HegicOptions.svg?label=HegicOption
 [![Chat on
 Telegram](https://img.shields.io/badge/Chat%20on-Telegram-blue.svg)](https://t.me/HegicOptions)
 
-Hegic Protocol v8888 is currently in active development. Deploy/use at your own risk.
+Hegic HardCore is currently in active development. Deploy/use at your own risk.
 
-![alt text](https://github.com/hegic/Hegic-protocol-v8888/blob/main/docs/Hegic%20Protocol%20v8888%20Contracts.png?raw=true)
 
 ## Development
 
