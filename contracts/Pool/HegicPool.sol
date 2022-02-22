@@ -184,7 +184,13 @@ abstract contract HegicPool is
         uint256 period,
         uint256 amount,
         uint256 strike
-    ) external override onlyRole(SELLER_ROLE) returns (uint256 id) {
+    )
+        external
+        override
+        onlyRole(SELLER_ROLE)
+        nonReentrant
+        returns (uint256 id)
+    {
         if (strike == 0) strike = _currentPrice();
         uint256 balance = totalBalance;
         uint256 amountToBeLocked = _calculateLockedAmount(amount);

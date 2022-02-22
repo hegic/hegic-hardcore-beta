@@ -21,11 +21,14 @@ pragma solidity 0.8.6;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../Options/OptionsManager.sol";
 import "./IHegicOperationalTreasury.sol";
 import "./IHegicStakeAndCover.sol";
 
 contract HegicOperationalTreasury is IHegicOperationalTreasury, AccessControl {
+    using SafeERC20 for IERC20;
+
     IERC20 public immutable override token;
     IOptionsManager public immutable override manager;
     IHegicStakeAndCover public stakeandcoverPool;
@@ -216,10 +219,11 @@ contract HegicOperationalTreasury is IHegicOperationalTreasury, AccessControl {
 
     function _withdraw(address to, uint256 amount) private {
         require(
-            amount + totalLocked + lockedPremium <= totalBalance,
+            amount + totalLocked + lockedPremium <=
+                totalBalance + stakeandcoverPool.availableBalance(),
             "The amount to withdraw is too large"
         );
         totalBalance -= amount;
-        token.transfer(to, amount);
+        token.safeTransfer(to, amount);
     }
 }
