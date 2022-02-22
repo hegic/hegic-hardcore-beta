@@ -111,7 +111,7 @@ contract OtmPriceCalculator is IPremiumCalculator, Ownable {
     }
 
     function setMaxPeriod(uint256 min, uint256 max) external onlyOwner {
-        maxPeriod = min;
+        minPeriod = min;
         maxPeriod = max;
         emit SetPeriodLimits(min, max);
     }
