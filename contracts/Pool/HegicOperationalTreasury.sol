@@ -21,12 +21,17 @@ pragma solidity 0.8.6;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../Options/OptionsManager.sol";
 import "./IHegicOperationalTreasury.sol";
 import "./IHegicStakeAndCover.sol";
 
-contract HegicOperationalTreasury is IHegicOperationalTreasury, AccessControl {
+contract HegicOperationalTreasury is
+    IHegicOperationalTreasury,
+    AccessControl,
+    ReentrancyGuard
+{
     using SafeERC20 for IERC20;
 
     IERC20 public immutable override token;
@@ -169,7 +174,7 @@ contract HegicOperationalTreasury is IHegicOperationalTreasury, AccessControl {
         uint256 lockedLiquidityID,
         uint256 amount,
         address account
-    ) external override {
+    ) external override nonReentrant {
         LockedLiquidity storage ll = lockedLiquidity[lockedLiquidityID];
 
         require(

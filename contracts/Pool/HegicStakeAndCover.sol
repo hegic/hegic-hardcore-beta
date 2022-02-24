@@ -21,11 +21,16 @@ pragma solidity 0.8.6;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./IHegicStakeAndCover.sol";
 import "hardhat/console.sol";
 
-contract HegicStakeAndCover is IHegicStakeAndCover, AccessControl {
+contract HegicStakeAndCover is
+    IHegicStakeAndCover,
+    AccessControl,
+    ReentrancyGuard
+{
     using SafeERC20 for IERC20;
 
     IERC20 public immutable hegicToken;
@@ -128,7 +133,7 @@ contract HegicStakeAndCover is IHegicStakeAndCover, AccessControl {
      * @notice Used for withdrawing tokens from the contract
      * @param amount The amount of tokens
      **/
-    function withdraw(uint256 amount) external {
+    function withdraw(uint256 amount) external nonReentrant {
         require(
             withdrawalsEnabled,
             "HegicStakeAndCover: Withdrawals are currently disabled"
@@ -152,7 +157,7 @@ contract HegicStakeAndCover is IHegicStakeAndCover, AccessControl {
      * @notice Used for claiming profits
      * accumulated on the contract
      **/
-    function claimProfit() public returns (uint256 profit) {
+    function claimProfit() public nonReentrant returns (uint256 profit) {
         profit = profitOf(msg.sender);
         require(profit > 0, "HegicStakeAndCover: The claimable profit is zero");
         uint256 profitShare =
@@ -181,8 +186,8 @@ contract HegicStakeAndCover is IHegicStakeAndCover, AccessControl {
      *         before making any deposits into the contract
      * @param amount The amount of tokens
      **/
-    function provide(uint256 amount) external {
-        if (profitOf(msg.sender) > 0) claimProfit();
+    function provide(uint256 amount) external nonReentrant {
+        require(profitOf(msg.sender) == 0, "Claim your profit");
         uint256 baseBalance = baseToken.balanceOf(address(this));
         require(
             baseBalance > 0 && totalBalance > 0,

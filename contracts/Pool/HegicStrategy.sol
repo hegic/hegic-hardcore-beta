@@ -22,9 +22,10 @@ pragma solidity 0.8.6;
 import "@chainlink/contracts/src/v0.7/interfaces/AggregatorV3Interface.sol";
 import "../Interfaces/Interfaces.sol";
 import "./IHegicOperationalTreasury.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./IHegicStrategy.sol";
 
-abstract contract HegicStrategy is Ownable, IHegicStrategy {
+abstract contract HegicStrategy is Ownable, IHegicStrategy, ReentrancyGuard {
     IHegicOperationalTreasury public immutable pool;
     AggregatorV3Interface public immutable priceProvider;
     uint8 public collateralizationRatio;
@@ -114,7 +115,7 @@ abstract contract HegicStrategy is Ownable, IHegicStrategy {
         uint32 period,
         uint128 amount,
         uint256 strike
-    ) external virtual returns (uint256 id) {
+    ) external virtual nonReentrant returns (uint256 id) {
         if (strike == 0) strike = _currentPrice();
         uint256 premium = _calculatePremium(period, amount, strike);
         uint128 lockedAmount = _calculateLockedAmount(amount, period, strike);
