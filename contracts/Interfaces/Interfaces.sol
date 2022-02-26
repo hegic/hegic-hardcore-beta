@@ -108,7 +108,6 @@ interface IHegicPool is IERC721, IPriceCalculator {
      * @param share The liquidity provider's share in the pool
      * @param amount The size of liquidity provided
      * @param creationTimestamp The liquidity deposit timestamp
-     * @param hedged The liquidity tranche type: hedged or unhedged (classic)
      **/
     struct Tranche {
         TrancheState state;

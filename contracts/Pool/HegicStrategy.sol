@@ -22,10 +22,13 @@ pragma solidity 0.8.6;
 import "@chainlink/contracts/src/v0.7/interfaces/AggregatorV3Interface.sol";
 import "../Interfaces/Interfaces.sol";
 import "./IHegicOperationalTreasury.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./IHegicStrategy.sol";
 
 abstract contract HegicStrategy is Ownable, IHegicStrategy, ReentrancyGuard {
+    using SafeERC20 for IERC20;
+
     IHegicOperationalTreasury public immutable pool;
     AggregatorV3Interface public immutable priceProvider;
     uint8 public collateralizationRatio;
@@ -125,7 +128,7 @@ abstract contract HegicStrategy is Ownable, IHegicStrategy, ReentrancyGuard {
             "HegicStrategy: The limit is exceeded"
         );
 
-        pool.token().transferFrom(msg.sender, address(pool), premium);
+        pool.token().safeTransferFrom(msg.sender, address(pool), premium);
 
         uint32 expiration = uint32(block.timestamp + period);
         id = pool.lockLiquidityFor(holder, lockedAmount, expiration);
